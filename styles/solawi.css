@@ -1,0 +1,129 @@
+/* Registerkarten */
+
+div.registerkarten {
+	display:grid;
+}
+
+div.registerkartenspalten1 { grid-template-columns:auto; }
+div.registerkartenspalten2 { grid-template-columns:auto auto; }
+div.registerkartenspalten3 { grid-template-columns:auto auto auto; }
+div.registerkartenspalten4 { grid-template-columns:auto auto auto auto; }
+div.registerkartenspalten5 { grid-template-columns:auto auto auto auto auto; }
+div.registerkartenspalten6 { grid-template-columns:auto auto auto auto auto auto; }
+div.registerkartenspalten7 { grid-template-columns:auto auto auto auto auto auto auto; }
+div.registerkartenspalten8 { grid-template-columns:auto auto auto auto auto auto auto auto; }
+div.registerkartenspalten9 { grid-template-columns:auto auto auto auto auto auto auto auto auto; }
+
+div.registerkarten > div.header_unselected {
+	display:inline;
+	margin:0px;
+	padding:3px;
+	text-align: center;
+}
+
+div.registerkarten > div.header_selected {
+	display:inline;
+	margin:0px;
+	padding:3px;
+	text-align: center;
+}
+
+div.registerkarten_borderstyle > div.header_unselected {
+	border-bottom: 1px solid black;
+	border-top: none;
+	border-right: none;
+	border-left: none;
+}
+
+div.registerkarten_borderstyle > div.header_selected {
+	border-top: 1px solid black;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+	border-bottom: none;
+}
+
+div.registerkarten_backgroundstyle > div.header_unselected {
+	background: rgba(0, 0, 0, 0.0);
+}
+
+div.registerkarten_backgroundstyle > div.header_selected {
+	background: rgba(0, 0, 0, 0.05);
+}
+
+div.registerkarte_visible {
+	display:block;
+	padding-left:20px;
+	padding-right:20px;
+	padding-top:20px;
+	padding-bottom:20px;
+}
+
+div.registerkarten_borderstyle > div.registerkarte_visible {
+	border-top: none;
+	border-bottom: 1px solid black;
+	border-right: 1px solid black;
+	border-left: 1px solid black;
+}
+
+div.registerkarten_backgroundstyle > div.registerkarte_visible {
+	background: rgba(0, 0, 0, 0.05);
+}
+
+div.registerkarte_hidden {
+	display:none;
+	border: none;
+}
+
+/* Tabellen */
+table.solawi {
+	padding: 10px;
+	width: 100%;
+}
+
+table.solawi tr.schwach td {
+	font-size: 0.75em;
+}
+
+table.solawi tr.stark td {
+	font-weight:bold;
+}
+
+table.solawi td.right {
+	padding:5px;
+	text-align: right;
+}
+
+table.solawi td.center {
+	padding:5px;
+	text-align: center;
+}
+
+table.solawi td.left {
+	padding:5px;
+	text-align: left;
+}
+
+/* Ein Grid aus divs */
+div.solawi_grid_simple {
+	display:grid;
+}
+
+div.solawi_grid_border {
+	display:grid;
+}
+
+div.solawi_grid_border > div {
+	border:1px solid black;
+	padding:30px;
+	margin:10px;
+}
+
+div.solawi_grid_border > div[id^="neu___"] {
+	border:1px dotted black;
+}
+
+/* Sonstiges */
+span.solawi_bereich {
+	white-space:nowrap;
+	font-weight:bold;
+}
