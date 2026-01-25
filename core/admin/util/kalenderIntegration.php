@@ -24,17 +24,22 @@ class SOLAWI_KalenderIntegration {
 		return self::$instance;
 	}
 
+	/**
+	 * Privater Konstruktor.
+	 * Legt gleich die notwendige Veranstaltungskategorie an.
+	 */
     private function __construct() {
+		if ( $this->isEventsCalendarAktiviert() && !term_exists( "verteiltage", self::KALENDER_TAXONOMY ) ) {
+			wp_insert_term( "Verteiltage", self::KALENDER_TAXONOMY,	[ "slug" => "verteiltage" ] );
+		}
     }
 
 	/**
 	 * Prüft, ob "The Events Calendar installiert ist
 	 */
 	private function isEventsCalendarAktiviert() {
-		if ( !function_exists( 'is_plugin_active' ) )
-			include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
-		$plugin_slug = 'the-events-calendar/the-events-calendar.php';
-		return is_plugin_active( $plugin_slug );
+		include_once( ABSPATH . 'wp-admin/includes/plugin.php' );
+		return is_plugin_active( 'the-events-calendar/the-events-calendar.php' );
 	}
 
     public function updateKalender( SOLAWI_Verteiltag $tag ) : array {
@@ -43,8 +48,8 @@ class SOLAWI_KalenderIntegration {
 
 		// Grundlegende Pflichtfelder
 		$title       = "Verteiltag für " . SOLAWI_arrayToString( $tag->getVerteilungen(), "getSimpleName" );
-		$start_time  = SOLAWI_formatDatum( $tag->getDatum(), true ) . " 13:00:00"; // TODO Uhrzeit
-		$end_time    = SOLAWI_formatDatum( $tag->getDatum(), true ) . " 18:00:00"; // TODO Uhrzeit
+		$start_time  = SOLAWI_formatDatum( $tag->getDatum(), true ) . $tag->getStartVerteilung() . ":00";
+		$end_time    = SOLAWI_formatDatum( $tag->getDatum(), true ) . $tag->getEndeVerteilung() . ":00";
 		$description = $this->getKalenderEintrag( $tag );
 		$post_name   = 'verteilung' . $tag->getId();
 
@@ -84,30 +89,23 @@ class SOLAWI_KalenderIntegration {
 		}
 
 		// Start und Ende setzen
-		update_post_meta( $event_id, '_EventTimezone',   'UTC+0' );
+		update_post_meta( $event_id, '_EventTimezone', 'Europe/Berlin' );
 		update_post_meta( $event_id, '_EventStartDate', $start_time );
 		update_post_meta( $event_id, '_EventStartDateUTC', $start_time );
-		update_post_meta( $event_id, '_EventEndDate',   $end_time );
-		update_post_meta( $event_id, '_EventEndDateUTC',   $end_time );
+		update_post_meta( $event_id, '_EventEndDate', $end_time );
+		update_post_meta( $event_id, '_EventEndDateUTC', $end_time );
 
-		// Kategorien setzen
-		$slugs = [];
-		foreach ( $tag->getVerteilungen() as $bereich ) {
-			$slugs[] = $bereich->getDbName();
-			if ( !term_exists( $bereich->getDbName(), self::KALENDER_TAXONOMY ) ) {
-				wp_insert_term( $bereich->getSimpleName(), self::KALENDER_TAXONOMY,
-					[ "slug" => $bereich->getDbName(),
-					"description" => "Verteiltag für " . $bereich->getName()
-					] );
-			}
-		}
-		wp_set_object_terms( $event_id, $slugs, self::KALENDER_TAXONOMY );
+		// Kategorie setzen
+		wp_set_object_terms( $event_id, [ "verteiltage" ], self::KALENDER_TAXONOMY );
 
 		// Rückgabe
 		return $this->ergebnis(null, $event_id );
 	}
 
-	private function ergebnis( string|null $errorMessage, int|null $eventId ) {
+	/**
+	 * Baut das Ergebnisobjekt zusammen
+	 */
+	private function ergebnis( string|null $errorMessage, int|null $eventId ) : array {
 		return [
 			"success" => $errorMessage == null,
 			"error" => $errorMessage,
@@ -115,6 +113,9 @@ class SOLAWI_KalenderIntegration {
 		];
 	}
 
+	/**
+	 * Gibt den Inhalt für den Kalendereintrag zurück
+	 */
 	private function getKalenderEintrag( SOLAWI_Verteiltag $tag ) : string {
 		return '<!-- wp:heading -->
 <!-- /wp:heading -->

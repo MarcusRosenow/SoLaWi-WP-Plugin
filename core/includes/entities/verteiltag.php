@@ -19,6 +19,18 @@ final class SOLAWI_Verteiltag {
 
 	private array $textJeBereich;
 	
+	private string $startGemueseErnten;
+
+	private string $endeGemueseErnten;
+	
+	private string $startKistenPacken;
+	
+	private string $endeKistenPacken;
+	
+	private string $startVerteilung;
+	
+	private string $endeVerteilung;
+
 	/**
 	 * Konstruktor
 	 */
@@ -28,6 +40,13 @@ final class SOLAWI_Verteiltag {
         $this->datum = $datum;
 		$this->zuVerteilendeBereiche = array();
 		$this->textJeBereich = array();
+
+		$this->startGemueseErnten = "08:00";
+		$this->endeGemueseErnten = "11:00";
+		$this->startKistenPacken = "11:00";
+		$this->endeKistenPacken = "13:00";
+		$this->startVerteilung = "13:00";
+		$this->endeVerteilung = "18:00";
     }
 
 	/**
@@ -162,4 +181,44 @@ final class SOLAWI_Verteiltag {
 		$wochentage = [ "Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag" ];
 		return $wochentage[ intval( $this->datum->format( "w" ) ) ];
 	}
+
+	public function getStartGemueseErnten() : string {
+		return $this->startGemueseErnten;
+	}
+
+	public function getEndeGemueseErnten() : string {
+		return $this->endeGemueseErnten;
+	}
+
+	public function setZeitGemueseErnten( string $start, string $ende ) : void {
+		$this->startGemueseErnten = $start;
+		$this->endeGemueseErnten = $ende;
+	}
+
+	public function getStartKistenPacken() : string {
+		return $this->startKistenPacken;
+	}
+
+	public function getEndeKistenPacken() : string {
+		return $this->endeKistenPacken;
+	}
+
+	public function setZeitKistenPacken( string $start, string $ende ) : void {
+		$this->startKistenPacken = $start;
+		$this->endeKistenPacken = $ende;
+	}
+
+	public function getStartVerteilung() : string {
+		return $this->startVerteilung;
+	}
+
+	public function getEndeVerteilung() : string {
+		return $this->endeVerteilung;
+	}
+
+	public function setZeitVerteilung( string $start, string $ende ) : void {
+		$this->startVerteilung = $start;
+		$this->endeVerteilung = $ende;
+	}
+
 }

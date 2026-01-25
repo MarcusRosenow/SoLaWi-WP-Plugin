@@ -4,13 +4,13 @@
  *
  * @package       SOLAWI
  * @author        Marcus Rosenow
- * @version       1.0.0
+ * @version       1.0.1
  *
  * @wordpress-plugin
  * Plugin Name:   SoLaWi
- * Plugin URI:    https://www.solawi-trebbow.de/
+ * Plugin URI:    https://github.com/MarcusRosenow/SoLaWi-WP-Plugin
  * Description:   Verwaltung der SoLaWi
- * Version:       1.0.0
+ * Version:       1.0.1
  * Author:        Marcus Rosenow
  * Author URI:    https://www.solawi-trebbow.de/
  * Text Domain:   solawi
@@ -21,10 +21,10 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 // Plugin name
-define( 'SOLAWI_NAME',			'SoLaWi Verteiltage' );
+define( 'SOLAWI_NAME',			'SoLaWi' );
 
 // Plugin version
-define( 'SOLAWI_VERSION',		'1.0.0' );
+define( 'SOLAWI_VERSION',		'1.0.1' );
 
 // Plugin Root File
 define( 'SOLAWI_PLUGIN_FILE',	__FILE__ );

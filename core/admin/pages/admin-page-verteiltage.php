@@ -32,6 +32,10 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 			else
 				$tag->setText( $bereich, null );
 		}
+		$tag->setZeitGemueseErnten( $postData[ "startErnte" ], $postData[ "endeErnte" ] );
+		$tag->setZeitKistenPacken( $postData[ "startPacken" ], $postData[ "endePacken" ] );
+		$tag->setZeitVerteilung( $postData[ "startVerteilung" ], $postData[ "endeVerteilung" ] );
+
 		SOLAWI_Repository::instance()->save( $tag );
 		$erg = SOLAWI_KalenderIntegration::instance()->updateKalender( $tag );
 		if ( !$erg[ "success" ])
@@ -71,6 +75,9 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 			$result .= "<h2>Neuer Tag: <input type='date' name='datum' $onInput value='" . SOLAWI_formatDatum( $tag->getDatum(), true ) . "'/></h2>";
 		else
 			$result .= "<h2>" . $tag->getWochentag() . " " . SOLAWI_formatDatum( $tag->getDatum() ) . "</h2>";
+
+		$result .= $this->getHtmlArbeitszeiten( $tag );
+
 		// Bereiche
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$selected = $tag->isVerteilungVon( $bereich ) ? " checked" : "";
@@ -95,5 +102,30 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 			"bereich" => $bereich->getDbName()
 		) );
 		return "<a href='$url' target='_blank'>" . $bereich->getName() . "</a>";
+	}
+
+	private function getHtmlArbeitszeiten( SOLAWI_Verteiltag $tag ) : string {
+		$id = $tag->getId();
+		$onInput = $this->getOnInputEventHtml( $id );
+		$grid = new SOLAWI_WidgetKachellayout( 3 );
+		$grid->setWidth( 30 );
+
+		$grid->add( null, "" );
+		$grid->add( null, "Start" );
+		$grid->add( null, "Ende" );
+
+		$grid->add( null, "Ernte&nbsp;(Gemüse)" );
+		$grid->add( null, "<input type='time' id='startErnte' name='startErnte' value='{$tag->getStartGemueseErnten()}' $onInput>" );
+		$grid->add( null, "<input type='time' id='endeErnte' name='endeErnte' value='{$tag->getEndeGemueseErnten()}' $onInput>" );
+
+		$grid->add( null, "Packen&nbsp;(Gemüse)" );
+		$grid->add( null, "<input type='time' id='startPacken' name='startPacken' value='{$tag->getStartKistenPacken()}' $onInput>" );
+		$grid->add( null, "<input type='time' id='endePacken' name='endePacken' value='{$tag->getEndeKistenPacken()}' $onInput>" );
+
+		$grid->add( null, "Verteilung" );
+		$grid->add( null, "<input type='time' id='startVerteilung' name='startVerteilung' value='{$tag->getStartVerteilung()}' $onInput>" );
+		$grid->add( null, "<input type='time' id='endeVerteilung' name='endeVerteilung' value='{$tag->getEndeVerteilung()}' $onInput>" );
+
+		return $grid->getHtml();
 	}
 }

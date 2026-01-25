@@ -5,7 +5,11 @@ if ( !defined( 'ABSPATH' ) )
 	exit;
 
 /**
- * Widget für Kacheln
+ * Widget für Kacheln.
+ * 
+ * $grid = new SOLAWI_WidgetKachellayout( 3 );
+ * $grid->add( null, "Zellinhalt" );
+ * $grid->getHtml();
  */
 final class SOLAWI_WidgetKachellayout extends SOLAWI_AbstractWidget {
 
@@ -25,10 +29,13 @@ final class SOLAWI_WidgetKachellayout extends SOLAWI_AbstractWidget {
 
     private int $anzahlSpalten;
 
+    private int $width;
+
     public function __construct( int $anzahlSpalten ) {
         $this->kacheln = array();
         $this->style = self::STYLE_NONE;
         $this->anzahlSpalten = $anzahlSpalten;
+        $this->width = 100;
     }
 
     /**
@@ -36,6 +43,13 @@ final class SOLAWI_WidgetKachellayout extends SOLAWI_AbstractWidget {
      */
     public function setStyle( string $style ) : void {
         $this->style = $style;
+    }
+
+    /**
+     * Setzt die Breite in Prozent: 0-100
+     */
+    public function setWidth( int $width ) : void {
+        $this->width = $width;
     }
 
     /**
@@ -52,6 +66,7 @@ final class SOLAWI_WidgetKachellayout extends SOLAWI_AbstractWidget {
         $style = "grid-template-columns:";
         for ( $i=0; $i < $this->anzahlSpalten; $i++ )
             $style .= "auto ";
+        $style .= ";width:" . $this->width . "%";
         $className = $this->style == self::STYLE_BORDER ? "solawi_grid_border" : "solawi_grid_simple";
         $result = "<div style='$style' class='$className'>";
         foreach ( $this->kacheln as $id => $kachel ) {

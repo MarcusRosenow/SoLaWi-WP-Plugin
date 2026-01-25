@@ -83,6 +83,12 @@ final class SOLAWI_Repository {
 			$columns[ "bereich_aktiv_" . $bereich->getDbName() ] = "bool DEFAULT FALSE NOT NULL";
 			$columns[ "bereich_text_" . $bereich->getDbName() ] = "varchar(255)";
 		}
+		$columns["start_ernte"] = "varchar(10) DEFAULT '08:00' NOT NULL";
+		$columns["ende_ernte"] = "varchar(10) DEFAULT '11:00' NOT NULL";
+		$columns["start_packen"] = "varchar(10) DEFAULT '11:00' NOT NULL";
+		$columns["ende_packen"] = "varchar(10) DEFAULT '13:00' NOT NULL";
+		$columns["start_verteilung"] = "varchar(10) DEFAULT '13:00' NOT NULL";
+		$columns["ende_verteilung"] = "varchar(10) DEFAULT '18:00' NOT NULL";
 		$this->createTable( $this->tableVerteiltag, $columns );
 		
 		// Tabelle wp_solawi_verteiltag2mitbauer
@@ -90,7 +96,8 @@ final class SOLAWI_Repository {
 		$columns[ "verteiltag_id" ] = "int(11) NOT NULL";
 		$columns[ "mitbauer_id" ] = "int(11) NOT NULL";
 		$columns[ "station_id" ] = "int(11)";
-		$columns[ "bemerkung" ] = "varchar(255)";
+		$columns[ "gemuese_ernten" ] = "bool DEFAULT FALSE NOT NULL";
+		$columns[ "kisten_packen" ] = "bool DEFAULT FALSE NOT NULL";
 		$this->createTable( $this->tableVerteiltag2mitbauer, $columns );
 		
 		// Tabelle wp_solawi_bieterverfahren
@@ -197,12 +204,19 @@ final class SOLAWI_Repository {
 				$attributes[ "bereich_aktiv_" . $bereich->getDbName() ] = $entity->isVerteilungVon( $bereich ) ? 1 : 0;
 				$attributes[ "bereich_text_" . $bereich->getDbName() ] = $entity->getText( $bereich );
 			}
+			$attributes["start_ernte"] = $entity->getStartGemueseErnten();
+			$attributes["ende_ernte"] = $entity->getEndeGemueseErnten();
+			$attributes["start_packen"] = $entity->getStartKistenPacken();
+			$attributes["ende_packen"] = $entity->getEndeKistenPacken();
+			$attributes["start_verteilung"] = $entity->getStartVerteilung();
+			$attributes["ende_verteilung"] = $entity->getEndeVerteilung();
 
 		} elseif ( $entity instanceof SOLAWI_Verteiltag2Mitbauer ) {
 			$attributes[ "verteiltag_id" ] = $entity->getVerteiltag()->getId();
 			$attributes[ "mitbauer_id" ] = $entity->getMitbauer()->getId();
 			$attributes[ "station_id" ] = $entity->getVerteilstation() !== null ? $entity->getVerteilstation()->getId() : null;
-			$attributes[ "bemerkung" ] = $entity-> getBemerkung();
+			$attributes[ "gemuese_ernten" ] = $entity->isGemueseErnten();
+			$attributes[ "kisten_packen" ] = $entity->isKistenPacken();
 
 		} elseif ( $entity instanceof SOLAWI_Bieterverfahren ) {
 			$attributes[ "gesamtbudget" ] = $entity->getGesamtbudget();
@@ -390,6 +404,9 @@ final class SOLAWI_Repository {
 					$tag->setText( $bereich, $row[ "bereich_text_" . $bereich->getDbName() ] );
 				}
 			}
+			$tag->setZeitGemueseErnten( $row["start_ernte"], $row["ende_ernte"] );
+			$tag->setZeitKistenPacken( $row["start_packen"], $row["ende_packen"] );
+			$tag->setZeitVerteilung( $row["start_verteilung"], $row["ende_verteilung"] );
 			$result[] = $tag;
 		}
 		return $result;
@@ -405,7 +422,7 @@ final class SOLAWI_Repository {
 	public function getVerteiltag2Mitbauer() : array {
 		global $wpdb;
 		$zeit = new DateTime();
-		$sql = "SELECT id, verteiltag_id, mitbauer_id, station_id, bemerkung FROM {$this->tableVerteiltag2mitbauer}";
+		$sql = "SELECT id, verteiltag_id, mitbauer_id, station_id, gemuese_ernten, kisten_packen FROM {$this->tableVerteiltag2mitbauer}";
 		$sql .= " WHERE verteiltag_id >= " . SOLAWI_formatDatum( $zeit, false );
 		$sql .= " ORDER BY id";
 		$dbResults = $wpdb->get_results( $sql, ARRAY_A );
@@ -420,7 +437,8 @@ final class SOLAWI_Repository {
 			} else {
 				$vt2mb->setVerteilstation( null );
 			}
-			$vt2mb->setBemerkung( $row["bemerkung"] );
+			$vt2mb->setGemueseErnten( boolval( $row["gemuese_ernten"] ) );
+			$vt2mb->setKistenPacken( boolval( $row["kisten_packen"] ) );
 			$result[] = $vt2mb;
 		}
 		return $result;

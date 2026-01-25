@@ -18,22 +18,28 @@ final class SOLAWI_Verteiltag2Mitbauer {
 
 	private SOLAWI_Verteilstation|null $verteilstation;
 
-	private string|null $bemerkung;
+	private bool $gemueseErnten;
+
+	private bool $kistenPacken;
 	
 	public function __construct( int $id, SOLAWI_Verteiltag $verteiltag, SOLAWI_Mitbauer $mitbauer ) {
 		$this->id = $id;
 		$this->verteiltag = $verteiltag;
         $this->mitbauer = $mitbauer;
 		$this->verteilstation = $mitbauer->getVerteilstation();
-		$this->bemerkung = null;
+        $this->gemueseErnten = false;
+        $this->kistenPacken = false;
     }
 
 	/**
 	 * Gibt alle Verteiltag2Mitarbeiter zurück
 	 */
-	public static function values() : array {
+	public static function values( SOLAWI_Verteiltag|null $verteiltag = null ) : array {
 		if ( !isset( self::$values ) ) {
 			self::$values = SOLAWI_Repository::instance()->getVerteiltag2Mitbauer();
+		}
+		if ( isset( $verteiltag ) ) {
+			return array_filter( self::$values, function( SOLAWI_Verteiltag2Mitbauer $vt2mb ) use ( $verteiltag ) { return $vt2mb->getVerteiltag() === $verteiltag; } );
 		}
 		return self::$values;
 	}
@@ -94,11 +100,25 @@ final class SOLAWI_Verteiltag2Mitbauer {
 		$this->verteilstation = $verteilstation;
 	}
 
-	public function getBemerkung() : string|null {
-		return $this->bemerkung;
+	/**
+	 * Ob der Mitbauer an diesem Verteiltag beim Ernten des Gemüses helfen möchte.
+	 */
+	public function isGemueseErnten() : bool {
+		return $this->gemueseErnten;
 	}
 
-	public function setBemerkung( string|null $bemerkung ) : void {
-		$this->bemerkung = $bemerkung;
+	public function setGemueseErnten( bool $gemueseErnten ) : void {
+		$this->gemueseErnten = $gemueseErnten;
+	}
+	
+	/**
+	 * Ob der Mitbauer an diesem Verteiltag beim Packen der Kisten helfen möchte.
+	 */
+	public function isKistenPacken() : bool {
+		return $this->kistenPacken;
+	}
+	
+	public function setKistenPacken( bool $kistenPacken ) : void {
+		$this->kistenPacken = $kistenPacken;
 	}
 }
