@@ -39,16 +39,15 @@ function solawi_show_textareas(id) {
 	form = document.getElementById("form_" + id);
 	checkboxen = form.getElementsByTagName("input");
 	textareas = form.getElementsByTagName("textarea");
+	inputs = form.getElementsByTagName("input");
 	aktiveBereiche = [];
 	for (i = 0; i < checkboxen.length; i++) {
 		checkbox = checkboxen[i];
 		if (checkbox.type == "checkbox" && checkbox.name.startsWith("verteilung_")) {
 			bereich = checkbox.name.substring("verteilung_".length);
 			checked = checkbox.checked;
-			for (j = 0; j < textareas.length; j++) {
-				if (textareas[j].name == "text_" + bereich)
-					textareas[j].hidden = !checked;
-			}
+			div = document.getElementById( "input_" + bereich + id );
+			div.hidden = !checked;
 		}
 	}
 }

@@ -66,18 +66,25 @@ final class SOLAWI_Mitbauer {
 	 * 
 	 * @param $einzelpositionen ein Array von SOLAWI_Mitbauer
 	 * @param $bereich der Bereich, um den es geht
-	 * @param $trenner der Trenner zwischen den Bereichen
+	 * @param $trenner der Trenner zwischen den Summen
 	 */
-	public static function getHtmlSummierteAnteile( array $mitbauern, SOLAWI_Verteiltag $verteiltag, SOLAWI_Bereich $bereich, string $trenner = "<br>" ) : string {
+	public static function getHtmlSummierteAnteile( array $mitbauern, SOLAWI_Verteiltag $tag, SOLAWI_Bereich $bereich, string $trenner = "<br>", bool $urlaubskistenAusgeben = false ) : string {
 		$anzahlen = [];
 		foreach ( $mitbauern as $mitbauer ) {
-			$anteil = " " . strval( $mitbauer->getErnteAnteil( $bereich, $verteiltag->getDatum() ) ) ;
+			$anteil = " " . strval( $mitbauer->getErnteAnteil( $bereich, $tag->getDatum() ) );
 			if ( $anteil !== "0" ) {
 				if ( isset( $anzahlen[ $anteil ] ) )
 					$anzahlen[ $anteil ] += 1;
 				else
 					$anzahlen[ $anteil ] = 1;
 			}
+		}
+		// Urlaubskisten sind immer ganze Kisten
+		if (  $urlaubskistenAusgeben && $tag->getAnzahlUrlaubskisten( $bereich ) > 0 ) {
+			if ( isset( $anzahlen[ " 1" ] ) )
+				$anzahlen[ " 1" ] += $tag->getAnzahlUrlaubskisten( $bereich );
+			else
+				$anzahlen[ " 1" ] = $tag->getAnzahlUrlaubskisten( $bereich );
 		}
 		$result = "";
 		if ( isset( $anzahlen[ " 0.5" ] ) ) {

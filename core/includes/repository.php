@@ -82,6 +82,7 @@ final class SOLAWI_Repository {
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$columns[ "bereich_aktiv_" . $bereich->getDbName() ] = "bool DEFAULT FALSE NOT NULL";
 			$columns[ "bereich_text_" . $bereich->getDbName() ] = "varchar(255)";
+			$columns[ "bereich_urlaubskisten_" . $bereich->getDbName() ] = "int(11) DEFAULT 0 NOT NULL";
 		}
 		$columns["start_ernte"] = "varchar(10) DEFAULT '08:00' NOT NULL";
 		$columns["ende_ernte"] = "varchar(10) DEFAULT '11:00' NOT NULL";
@@ -203,6 +204,7 @@ final class SOLAWI_Repository {
 			foreach ( SOLAWI_Bereich::values() as $bereich ) {
 				$attributes[ "bereich_aktiv_" . $bereich->getDbName() ] = $entity->isVerteilungVon( $bereich ) ? 1 : 0;
 				$attributes[ "bereich_text_" . $bereich->getDbName() ] = $entity->getText( $bereich );
+				$attributes[ "bereich_urlaubskisten_" . $bereich->getDbName() ] = $entity->getAnzahlUrlaubskisten( $bereich );
 			}
 			$attributes["start_ernte"] = $entity->getStartGemueseErnten();
 			$attributes["ende_ernte"] = $entity->getEndeGemueseErnten();
@@ -402,6 +404,7 @@ final class SOLAWI_Repository {
 				if ( $row[ "bereich_aktiv_" . $bereich->getDbName() ] === "1" ) {
 					$tag->setVerteilungVon( $bereich );
 					$tag->setText( $bereich, $row[ "bereich_text_" . $bereich->getDbName() ] );
+					$tag->setAnzahlUrlaubskisten( $bereich, intval( $row[ "bereich_urlaubskisten_" . $bereich->getDbName() ] ) );
 				}
 			}
 			$tag->setZeitGemueseErnten( $row["start_ernte"], $row["ende_ernte"] );

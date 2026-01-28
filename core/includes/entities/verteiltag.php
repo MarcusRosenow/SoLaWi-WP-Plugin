@@ -18,6 +18,8 @@ final class SOLAWI_Verteiltag {
 	private array $zuVerteilendeBereiche;
 
 	private array $textJeBereich;
+
+	private array $anzahlUrlaubskistenJeBereich;
 	
 	private string $startGemueseErnten;
 
@@ -40,6 +42,11 @@ final class SOLAWI_Verteiltag {
         $this->datum = $datum;
 		$this->zuVerteilendeBereiche = array();
 		$this->textJeBereich = array();
+		$this->anzahlUrlaubskistenJeBereich = array();
+		foreach ( SOLAWI_Bereich::values() as $bereich ) {
+			$this->setAnzahlUrlaubskisten( $bereich, 0 );
+			$this->setText( $bereich, null );
+		}
 
 		$this->startGemueseErnten = "08:00";
 		$this->endeGemueseErnten = "11:00";
@@ -162,9 +169,7 @@ final class SOLAWI_Verteiltag {
 	 * Gibt den Text für den übergebenen Bereich zurück.
 	 */
 	public function getText( SOLAWI_Bereich $bereich ) : string|null {
-		if ( isset( $this->textJeBereich[ $bereich->getDbName() ] ) )
-			return $this->textJeBereich[ $bereich->getDbName() ];
-		return null;
+		return $this->textJeBereich[ $bereich->getDbName() ];
 	}
 
 	/**
@@ -221,4 +226,11 @@ final class SOLAWI_Verteiltag {
 		$this->endeVerteilung = $ende;
 	}
 
+	public function getAnzahlUrlaubskisten( SOLAWI_Bereich $bereich ) : int {
+		return $this->anzahlUrlaubskistenJeBereich[ $bereich->getDbName() ];
+	}
+
+	public function setAnzahlUrlaubskisten( SOLAWI_Bereich $bereich, int $anzahl ) : void {
+		$this->anzahlUrlaubskistenJeBereich[ $bereich->getDbName() ] = $anzahl;
+	}
 }

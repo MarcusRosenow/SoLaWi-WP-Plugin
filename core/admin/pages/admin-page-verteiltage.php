@@ -31,6 +31,10 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 				$tag->setText( $bereich, $postData[ "text_" . $bereich->getDbName() ] );
 			else
 				$tag->setText( $bereich, null );
+			if ( isset( $postData[ "urlaubskisten_" . $bereich->getDbName() ] ) )
+				$tag->setAnzahlUrlaubskisten( $bereich, intval( $postData[ "urlaubskisten_" . $bereich->getDbName() ] ) );
+			else
+				$tag->setAnzahlUrlaubskisten( $bereich, 0 );
 		}
 		$tag->setZeitGemueseErnten( $postData[ "startErnte" ], $postData[ "endeErnte" ] );
 		$tag->setZeitKistenPacken( $postData[ "startPacken" ], $postData[ "endePacken" ] );
@@ -67,7 +71,6 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 	private function initKachel( SOLAWI_Verteiltag $tag, bool $datumBearbeitbar = false ) : void {
 		$id = $tag->getId();
 		$onInput = $this->getOnInputEventHtml( $id );
-		$onClick = "onclick='solawi_show_textareas($id)'";
 		$name = SOLAWI_formatDatum( $tag->getDatum() ) . " " . SOLAWI_arrayToString( $tag->getVerteilungen(), "getName" );
 		$result = "<form method='POST' id='form_$id'>";
 		// Überschrift
@@ -80,10 +83,7 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 
 		// Bereiche
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
-			$selected = $tag->isVerteilungVon( $bereich ) ? " checked" : "";
-			$result .= "<p><input type='checkbox' name='verteilung_{$bereich->getDbName()}'$selected $onInput $onClick>&nbsp;" . $bereich->getName() ."<br>";
-			$hidden = !$tag->isVerteilungVon( $bereich ) ? " hidden" : "";
-			$result .= "<textarea name='text_{$bereich->getDbName()}' $onInput style='width:100%;'$hidden>{$tag->getText( $bereich )}</textarea></p>";
+			$result .= $this->getHtmlFuerBereich( $tag, $bereich );
 		}
 		$result .= $this->getSubmitButtonHtml( $id );
 		$result .= "</form>";
@@ -94,6 +94,24 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 			$result .= "</p>";
 		}
 		$this->addKachel( $name, $result, !$datumBearbeitbar );
+	}
+
+	/**
+	 * Baut das HTML für einen Bereich an einem Verteiltag
+	 */
+	private function getHtmlFuerBereich( SOLAWI_Verteiltag $tag, SOLAWI_Bereich $bereich ) {
+		$id = $tag->getId();
+		$onInput = $this->getOnInputEventHtml( $id );
+		$onClick = "onclick='solawi_show_textareas( $id )'";
+		$selected = $tag->isVerteilungVon( $bereich ) ? " checked" : "";
+		$bereichName = $bereich->getDbName();
+		$hidden = !$tag->isVerteilungVon( $bereich ) ? " hidden" : "";
+		$result = "<input type='checkbox' name='verteilung_$bereichName'$selected $onInput $onClick>&nbsp;" . $bereich->getName() ."<br>";
+		$result .= "<div id='input_$bereichName$id' style='text-align:right'$hidden>";
+		$result .= "<textarea name='text_$bereichName' $onInput style='width:100%;'>{$tag->getText( $bereich )}</textarea><br>";
+		$result .= "Urlaubskisten:&nbsp;<input type='number' min='0' max='99' name='urlaubskisten_$bereichName' value='{$tag->getAnzahlUrlaubskisten( $bereich )}' $onInput/>";
+		$result .= "</div>";
+		return $result;
 	}
 
 	private function getLinkFuerUebersicht( SOLAWI_Verteiltag $tag, SOLAWI_Bereich $bereich ) : string {
