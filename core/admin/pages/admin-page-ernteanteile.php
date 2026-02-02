@@ -18,20 +18,21 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 			return new SOLAWI_SavePostdataResult( null, "Nicht authorisiert! Nicht gespeichert!" );
 		$mitbauer = SOLAWI_Mitbauer::valueOf( $id );
 		// jetzt müssen wir die Ernteanteile durchgehen ...
-		$ernteanteile = $mitbauer->getErnteAnteile();
+		$ernteanteile = $mitbauer->getErnteanteile();
 		foreach( $ernteanteile as $ernteanteil ) {
-			$result = $this->updateErnteAnteil( $ernteanteil, $postData, SOLAWI_formatDatum( $ernteanteil->getGueltigAb(), false ) );
+			$result = $this->updateErnteanteil( $ernteanteil, $postData, SOLAWI_formatDatum( $ernteanteil->getGueltigAb(), false ) );
 			if ( $result != null )
 				return $result;
+			$mitbauer->updateErnteanteil( $ernteanteil );
 		}
 		// jetzt wurde evtl. noch ein zukünftiger Ernteanteil erfasst
 		$neu = null;
 		if ( isset( $postData[ "anteilNeuDatum" ] ) && $postData[ "anteilNeuDatum" ] != "" ) {
 			$neu = new SOLAWI_MitbauerErnteanteil( new DateTime( $postData[ "anteilNeuDatum" ] ) );
-			$result = $this->updateErnteAnteil( $neu, $postData, "neu");
+			$result = $this->updateErnteanteil( $neu, $postData, "neu");
 			if ( $result != null )
 				return $result;
-			$mitbauer->addErnteAnteil( $neu );
+			$mitbauer->addErnteanteil( $neu );
 		} else {
 			// Kein neues Datum angegeben, aber vielleicht neue Ernteanteile eingetragen?
 			foreach ( SOLAWI_Bereich::values() as $bereich ) {
@@ -43,7 +44,6 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 
 		$station = SOLAWI_Verteilstation::valueOf( intval( $postData[ "verteilstation" ] ) );
 		$mitbauer->setVerteilstation( $station );
-		SOLAWI_Repository::instance()->save( $mitbauer );
 		return new SOLAWI_SavePostdataResult( "Erfolgreich gespeichert!", null, isset( $neu ) );
 	}
 
@@ -52,7 +52,8 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	 * 
 	 * @return null, wenn alles ok ist, ansonsten ein kleiner Fehlertext.
 	 */
-	private function updateErnteAnteil( SOLAWI_MitbauerErnteanteil &$ernteanteil, array $postData, string $schluessel ) : SOLAWI_SavePostdataResult|null {
+	private function updateErnteanteil( SOLAWI_MitbauerErnteanteil &$ernteanteil, array $postData, string $schluessel ) : SOLAWI_SavePostdataResult|null {
+		$neu = new SOLAWI_MitbauerErnteanteil( new DateTime( $postData[ "anteilNeuDatum" ] ) );
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$bereich_anteil = $postData[ "anteil" . $bereich->getDbName() . $schluessel ];
 			$bereich_preis = $postData[ "preis" . $bereich->getDbName() . $schluessel ];
@@ -74,7 +75,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	protected function initInhalt() : void {
 		if ( !SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) )
 			return;
-		$mitbauern = SOLAWI_Mitbauer::values();
+		$mitbauern = SOLAWI_Mitbauer::values( null, true );
 		$stichtage = $this->ermittleStichtage( $mitbauern );
 		$widget = new SOLAWI_WidgetRegisterkarten( "Zusammenfassung" );
 		$widget->setStyle( SOLAWI_WidgetRegisterkarten::STYLE_BACKGROUND );
@@ -99,12 +100,12 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$anzahlen[ $bereich->getDbName() ] = 0;
 			foreach ( $mitbauern as $mitbauer ) {
-				$anzahlen[ $bereich->getDbName() ] += $mitbauer->getErnteAnteil( $bereich, $stichtag );
+				$anzahlen[ $bereich->getDbName() ] += $mitbauer->getErnteanteil( $bereich, $stichtag );
 			}
 		}
 		$anzahlAktive = 0;
 		foreach ( $mitbauern as $mitbauer ) {
-			$anzahlAktive += $mitbauer->hasErnteAnteile( null, $stichtag ) ? 1 : 0;
+			$anzahlAktive += $mitbauer->hasErnteanteile( null, $stichtag ) ? 1 : 0;
 		}
 		$result = "";
 		if ( SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) )
@@ -125,7 +126,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	private function ermittleStichtage( array $mitbauern ) : array {
 		$result = array( 0 => null );
 		foreach ( $mitbauern as $mitbauer ) {
-			$result = array_merge( $result, $mitbauer->getZukuenftigeStichtageFuerErnteAnteile() );
+			$result = array_merge( $result, $mitbauer->getZukuenftigeStichtageFuerErnteanteile() );
 		}
 		$result = array_unique( $result, SORT_REGULAR );
 		sort( $result );
@@ -138,10 +139,10 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	private function baueMitbauerBlock( SOLAWI_Mitbauer $mitbauer ) : string {
 		$result = "<form method='POST'>";
 		$result .= "<h2>" . $mitbauer->getName() . "</h2>";
-		$result .= "<p>" . $mitbauer->getEmailAsHtmlString() . "</p>";
+		$result .= "<p>" . $mitbauer->getEmailAsHtmlString() . " " . $mitbauer->getTelefonnummerAsHtmlString() . "</p>";
 		$nurLesen = !SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER );
 		$result .= $this->getHtmlFuerVerteilstation( $mitbauer, $nurLesen );
-		$result .= $this->getHtmlFuerErnteAnteile( $mitbauer, $nurLesen );
+		$result .= $this->getHtmlFuerErnteanteile( $mitbauer, $nurLesen );
 		if ( !$nurLesen )
 			$result .= $this->getSubmitButtonHtml( $mitbauer->getId() );
 		$result .= "</form>";
@@ -169,18 +170,18 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	/**
 	 * Gibt die Registerkarten mit den Ernteanteilen aus
 	 */
-	private function getHtmlFuerErnteAnteile( SOLAWI_Mitbauer $mitbauer, bool $nurLesen ) : string {
+	private function getHtmlFuerErnteanteile( SOLAWI_Mitbauer $mitbauer, bool $nurLesen ) : string {
 		$id = $mitbauer->getId();
 		$widget = new SOLAWI_WidgetRegisterkarten( strval( $id ) );
 		$widget->setStyle( SOLAWI_WidgetRegisterkarten::STYLE_BACKGROUND );
-		$ernteanteile = $mitbauer->getErnteAnteile();
+		$ernteanteile = $mitbauer->getErnteanteile();
 		foreach( $ernteanteile as $ernteanteil ) {
 			$title = $ernteanteile[0] == $ernteanteil ? "Aktuell" : ( "Ab " . SOLAWI_formatDatum( $ernteanteil->getGueltigAb() ) );
-			$body = $this->getHtmlFuerErnteAnteil( $mitbauer, $ernteanteil, $nurLesen );
+			$body = $this->getHtmlFuerErnteanteil( $mitbauer, $ernteanteil, $nurLesen );
 			$widget->add( "regkarte-$id-" . SOLAWI_formatDatum( $ernteanteil->getGueltigAb() ), $title, $body );
 		}
 		if ( !$nurLesen )
-			$widget->add( "regkarte-$id-neu", "+", $this->getHtmlFuerErnteAnteil( $mitbauer, null, false ) );
+			$widget->add( "regkarte-$id-neu", "+", $this->getHtmlFuerErnteanteil( $mitbauer, null, false ) );
 		return $widget->getHtml();
 	}
 
@@ -189,7 +190,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	 * 
 	 * @param ernteanteil null für einen neu-Block
 	 */
-	private function getHtmlFuerErnteAnteil( SOLAWI_Mitbauer $mitbauer, SOLAWI_MitbauerErnteanteil|null $ernteanteil, bool $nurLesen ) : string {
+	private function getHtmlFuerErnteanteil( SOLAWI_Mitbauer $mitbauer, SOLAWI_MitbauerErnteanteil|null $ernteanteil, bool $nurLesen ) : string {
 		// Beim neu-Block muss das Datum angegeben werden
 		$result = "";
 		if ( $ernteanteil == null && !$nurLesen ) {

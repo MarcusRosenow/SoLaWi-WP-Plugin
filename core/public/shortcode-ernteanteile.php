@@ -14,6 +14,6 @@ final class SOLAWI_ShortcodeErnteanteile extends SOLAWI_AbstractShortcode {
     }
 
     public function getHtml( SOLAWI_Mitbauer $mitbauer ) : string {
-        return $mitbauer->getHtmlTableErnteAnteile( true );
+        return $mitbauer->getHtmlTableErnteanteile( true );
     }
 }

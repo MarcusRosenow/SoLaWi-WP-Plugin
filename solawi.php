@@ -44,7 +44,6 @@ require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/bieterverfahren.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/bieterverfahrenGebot.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/mitbauer.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/mitbauer_ernteanteil.php';
-require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/user2rolle.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/verteilstation.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/verteiltag.php';
 require_once SOLAWI_PLUGIN_DIR . 'core/includes/entities/verteiltag2mitbauer.php';
@@ -83,6 +82,20 @@ function SOLAWI_UNINSTALL() {
 	new SOLAWI_Uninstaller();
 }
 register_uninstall_hook( __FILE__, 'SOLAWI_UNINSTALL' );
+
+
+function SOLAWI_UPGRADE( $upgrader_object, $options ) {
+    $solawi_plugin_path_name = plugin_basename( __FILE__ );
+    if ( $options['action'] == 'update' && $options['type'] == 'plugin' ) {
+       foreach($options['plugins'] as $plugin) {
+          if ($plugin==$solawi_plugin_path_name) {
+             SOLAWI_ACTIVATE();
+          }
+       }
+    }
+}
+add_action( 'upgrader_process_complete', 'SOLAWI_UPGRADE',10, 2);
+
 
 /**
  * Initialisiert einen neuen Nutzer

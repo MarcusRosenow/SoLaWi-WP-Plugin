@@ -28,7 +28,6 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
         $stationId = intval( $postData[ "station" ] );
         $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueById( $id );
     	$vt2mb->setVerteilstation( $stationId >= 0 ? SOLAWI_Verteilstation::valueOf( $stationId ) : null );
-    	$vt2mb->setBemerkung( $postData[ "bemerkung" ] );
     	SOLAWI_Repository::instance()->save( $vt2mb );
 		$this->mitbauer = $vt2mb->getMitbauer();
 		return new SOLAWI_SavePostdataResult();
@@ -43,7 +42,7 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
 		if ( $this->mitbauer !== null ) {
 			$this->addKachel( "Zusammenfassung", $this->getHtmlFuerMitbauerInfo(), false );
 			foreach( SOLAWI_Verteiltag::values() as $tag ) {
-				if ( !$this->mitbauer->hasErnteAnteile( $tag->getVerteilungen(), $tag->getDatum() ) )
+				if ( !$this->mitbauer->hasErnteanteile( $tag->getVerteilungen(), $tag->getDatum() ) )
 					continue;
 				$this->addKachel( null, $this->getHtmlFuerBearbeitung( $tag ) );
 			}
@@ -55,7 +54,7 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
 		$onInput = "oninput='solawi_changed($id)'";
 		$result = "<p><form method='post'>";
 		$result .= "Zeige Daten für:&nbsp;<select name='mitbauer' $onInput>";
-		foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
+		foreach ( SOLAWI_Mitbauer::values( null, true ) as $mitbauer ) {
 			$selected = $mitbauer === $this->mitbauer ? " selected" : "";
 			$result .= "<option value='{$mitbauer->getId()}'$selected>{$mitbauer->getName()}</option>";
 		}
@@ -68,7 +67,7 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
 	private function getHtmlFuerMitbauerInfo() : string {
         $result = "<h2>" . $this->mitbauer->getName() . "</h2>";
 		$result .= "<p>" . $this->mitbauer->getEmailAsHtmlString() . "</p>";
-		$result .= $this->mitbauer->getHtmlTableErnteAnteile();
+		$result .= $this->mitbauer->getHtmlTableErnteanteile();
         $result .= "<p>Verteilstation: " . $this->mitbauer->getVerteilstation()->getName() . "</p>";
 		return $result;
 	}
@@ -78,8 +77,8 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
 		$onInput = $this->getOnInputEventHtml( $vt2mb->getId() );
         $result = "<h2>" . SOLAWI_formatDatum( $tag->getDatum() ) . "</h2>\n";
 		$result .= "<form method='POST'>";
-        $result .= $this->getHtmlAuswaehlbareVerteilstationen( $vt2mb );
-        $result .= "<br><textarea rows='3' cols='30' maxlength='255' placeholder='Bemerkung' name='bemerkung' $onInput>{$vt2mb->getBemerkung()}</textarea><br>";
+        $result .= $this->getHtmlAuswaehlbareVerteilstationen( $vt2mb ) . "<br>";
+		// TODO Gemüse ernten und Kisten packen?
         $result .= $this->getSubmitButtonHtml( $vt2mb->getId(), false );
         $result .= "</form>\n";
 		return $result;

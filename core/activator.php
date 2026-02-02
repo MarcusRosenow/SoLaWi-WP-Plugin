@@ -13,5 +13,6 @@ final class SOLAWI_Activator {
 	function __construct(){
 		SOLAWI_Repository::instance()->createTables();
 		SOLAWI_UserInitializer::initUsers();
+		
 	}
 }

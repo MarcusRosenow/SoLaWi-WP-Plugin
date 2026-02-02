@@ -99,9 +99,9 @@ function SOLAWI_isGueltigerPreis( $wert ) : bool {
  * Wird kein User übergeben, wird der aktuelle User verwendet.
  */
 function SOLAWI_hasRolle( SOLAWI_Rolle ...$rollen ) : bool {
-	$userId = get_current_user_id();
+	$user = SOLAWI_Mitbauer::getAktuellenMitbauer();
 	foreach( $rollen as $rolle )
-		if ( SOLAWI_User2Rolle::hasUserRolle( $userId, $rolle ))
+		if ( $user->hasRolle( $rolle ) )
 			return true;
 	return false;
 }

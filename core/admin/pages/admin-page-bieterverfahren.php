@@ -99,18 +99,18 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 				$datum = $verfahren->getStartDerSaison();
 				foreach( SOLAWI_Mitbauer::values() as $mitbauer ) {
 					$gebot = $verfahren->getGebot( $runde, $mitbauer );
-					$ernteAnteileBisher = $mitbauer->getErnteAnteilIntern( $datum, false );
-					$ernteAnteileNeu = $mitbauer->getErnteAnteilIntern( $datum, true );
+					$ernteanteileBisher = $mitbauer->getErnteanteilIntern( $datum, false );
+					$ernteanteileNeu = $mitbauer->getErnteanteilIntern( $datum, true );
 					foreach( SOLAWI_Bereich::values() as $bereich ) {
 						if ( $gebot != null ) {
-							$ernteAnteileNeu->setAnzahl( $bereich, $gebot->getAnzahl( $bereich ) );
-							$ernteAnteileNeu->setPreis( $bereich, $gebot->getPreis( $bereich ) );
+							$ernteanteileNeu->setAnzahl( $bereich, $gebot->getAnzahl( $bereich ) );
+							$ernteanteileNeu->setPreis( $bereich, $gebot->getPreis( $bereich ) );
 						} else {
-							$anzahl = $ernteAnteileBisher->getAnzahl( $bereich );
-							$alterPreis = $ernteAnteileBisher->getPreis( $bereich );
+							$anzahl = $ernteanteileBisher->getAnzahl( $bereich );
+							$alterPreis = $ernteanteileBisher->getPreis( $bereich );
 							$neuerPreis = $anzahl * $verfahren->getDurchschnittsgebot( $runde, $bereich );
-							$ernteAnteileNeu->setAnzahl( $bereich, $anzahl );
-							$ernteAnteileNeu->setPreis( $bereich, max( $alterPreis, $neuerPreis ) );
+							$ernteanteileNeu->setAnzahl( $bereich, $anzahl );
+							$ernteanteileNeu->setPreis( $bereich, max( $alterPreis, $neuerPreis ) );
 						}
 					}
 					SOLAWI_Repository::instance()->save( $mitbauer );

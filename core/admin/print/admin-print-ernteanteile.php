@@ -26,7 +26,7 @@ final class SOLAWI_AdminPrintErnteanteile extends SOLAWI_AbstractAdminPrint {
         $result .= "</tr>";
         $mitbauern = SOLAWI_Mitbauer::values();
         foreach ( $mitbauern as $mitbauer )
-            if ( $mitbauer->hasErnteAnteile( null, $tag->getDatum() ) )
+            if ( $mitbauer->hasErnteanteile( null, $tag->getDatum() ) )
                 $result .= $this->getHtmlZeile( $mitbauer, $tag  );
         $result .= "</table>";
         return $result;
@@ -34,7 +34,7 @@ final class SOLAWI_AdminPrintErnteanteile extends SOLAWI_AbstractAdminPrint {
 
     private function getHtmlZeile( SOLAWI_Mitbauer $mitbauer, SOLAWI_Verteiltag $tag ) : string {
         $result = "<tr><td>" . $mitbauer->getName() . "</td>";
-        $ea = $mitbauer->getErnteAnteilIntern( $tag->getDatum() );
+        $ea = $mitbauer->getErnteanteilIntern( $tag->getDatum() );
         foreach( SOLAWI_Bereich::values() as $bereich ) {
             $result .= "<td align=right>" . SOLAWI_formatAnzahl( $ea->getAnzahl( $bereich ) ) . "</td>";
             $result .= "<td align=right>" . SOLAWI_formatWaehrung( $ea->getPreis( $bereich ) ) . "</td>";

@@ -8,38 +8,42 @@ if ( ! defined( 'ABSPATH' ) )
  */
 final class SOLAWI_Mitbauer {
 	
+	const META_KEY_VERTEILSTATION = 'solawi_verteilstation';
+
+	const META_KEY_ERNTEANTEILE = 'solawi_ernteanteile';
+
+	const META_KEY_TELEFON = 'solawi_telefon';
+
+	const META_KEY_ADRESSE = 'solawi_adresse';
+
+	const META_KEY_BEMERKUNG = 'solawi_bemerkung';
+
+	const META_KEY_ROLLEN = 'solawi_rollen';
+
     private static array|null $values;
 
 	private int $userID;
 	
-	private string $name;
-	
-	private string $email;
-	
-	/**
-	 * Ein Array mit SOLAWI_MitbauerErnteanteil
-	 */
-	private array $ernteanteile;
-	
-	private SOLAWI_Verteilstation $verteilstation;
-	
-	public function __construct( int $userID, string $name, string $email ) {
+	public function __construct( int $userID ) {
         $this->userID = $userID;
-        $this->name = $name;
-		$this->email = $email;
-		$this->ernteanteile = array();
-		$this->verteilstation = SOLAWI_Verteilstation::values()[0];
     }
 	
 	/**
 	 * Gibt alle Mitbauern zurück
 	 */
-	public static function values( SOLAWI_Verteilstation|null $station = null ) : array {
+	public static function values( SOLAWI_Verteilstation|null $station = null, bool $nurEchteMitbauern = false ) : array {
 		if ( !isset( self::$values ) ) {
-			self::$values = SOLAWI_Repository::instance()->getMitbauern();
+			self::$values = [];
+			foreach( get_users( [ 'fields' => [ 'ID' ] ] ) as $userAttributes ) {	
+				$userId = $userAttributes->ID;
+				self::$values[] = new SOLAWI_Mitbauer( $userId );
+			}
 		}
 		if ( isset( $station ) ) {
 			return array_filter( self::$values, function( SOLAWI_Mitbauer $mitbauer ) use ( $station ) { return $mitbauer->getVerteilstation() === $station; } );
+		}
+		if ( $nurEchteMitbauern ) {
+			return array_filter( self::$values, function( SOLAWI_Mitbauer $mitbauer ) { return $mitbauer->hasRolle( SOLAWI_Rolle::MITBAUER ); } );
 		}
 		return self::$values;
 	}
@@ -71,7 +75,7 @@ final class SOLAWI_Mitbauer {
 	public static function getHtmlSummierteAnteile( array $mitbauern, SOLAWI_Verteiltag $tag, SOLAWI_Bereich $bereich, string $trenner = "<br>", bool $urlaubskistenAusgeben = false ) : string {
 		$anzahlen = [];
 		foreach ( $mitbauern as $mitbauer ) {
-			$anteil = " " . strval( $mitbauer->getErnteAnteil( $bereich, $tag->getDatum() ) );
+			$anteil = " " . strval( $mitbauer->getErnteanteil( $bereich, $tag->getDatum() ) );
 			if ( $anteil !== "0" ) {
 				if ( isset( $anzahlen[ $anteil ] ) )
 					$anzahlen[ $anteil ] += 1;
@@ -110,8 +114,8 @@ final class SOLAWI_Mitbauer {
 	/**
 	 * Baut eine kleine HTML-Tabelle mit den Ernteanteilen dieses Mitbauers
 	 */
-	public function getHtmlTableErnteAnteile( bool $mitPreisen = false ) : string {
-		$anteile = $this->getErnteAnteile();
+	public function getHtmlTableErnteanteile( bool $mitPreisen = false ) : string {
+		$anteile = $this->getErnteanteile();
 		$result = "<table class='solawi'><tr class='stark'><td></td>";
 		foreach ( $anteile as $anteil ) {
 			$titel = $anteile[0] === $anteil ? "Aktuell" : ("Ab dem<br>" .SOLAWI_formatDatum( $anteil->getGueltigAb() ) );
@@ -131,10 +135,11 @@ final class SOLAWI_Mitbauer {
 
 	/**
 	 * Gibt den aktuell angemeldeten Mitbauer zurück.
+	 * null, wenn der Nutzer nicht angemeldet ist
 	 */
 	public static function getAktuellenMitbauer() : SOLAWI_Mitbauer|null {
 		$userid = get_current_user_id();
-		return $userid > 0 && SOLAWI_hasRolle( SOLAWI_Rolle::MITBAUER ) ? self::valueOf( $userid ) : null;
+		return $userid > 0 ? self::valueOf( $userid ) : null;
 	}
 	
 	public function getId() : int {
@@ -142,46 +147,96 @@ final class SOLAWI_Mitbauer {
 	}
 
 	public function getName() : string {
-		return $this->name;
+		return get_userdata( $this->getId() )->get( 'display_name' );
 	}
 	
 	public function getEmail() : string {
-		return $this->email;
+		return get_userdata( $this->getId() )->get( 'user_email' );
 	}
 	
 	public function getEmailAsHtmlString() : string {
-		return "<a href='mailto:" . $this->getEmail() . "'>" . $this->getEmail() . "</a>";
+		$mail = $this->getEmail();
+		return "<a href='mailto:$mail'>$mail</a>";
 	}
 	
 	/**
+	 * Gibt Metaangaben mit dem übergebenen Key zurück.
+	 * Wird der Key nicht gefunden, wird $defaultValue zurückgegeben.
+	 */
+	private function getMeta( string $key, mixed $defaultValue ) : mixed {
+		$value = get_user_meta( $this->userID, $key, true );
+		if ( $value === false || $value === '' )
+			return $defaultValue;
+		return $value;
+	}
+
+	/**
+	 * Setzt den übergebenen Meta-Key auf den übergebenen Wert
+	 */
+	private function setMeta( string $key, mixed $value ) : void {
+		if ( $value !== false && $value !== null && $value !== '' )
+			update_user_meta( $this->userID, $key, $value );
+		else
+			delete_user_meta( $this->userID, $key );
+	}
+
+	/**
 	 * Gibt die Ernteanteile für diesen Mitbauern zurück.
 	 * Wurden bisher noch keine Ernteanteile hinzugefügt, wird ein Array mit einem Element mit aktuellem Tagesdatum geliefert.
+	 * 
+	 * TODO $emptyAllowed wegoperieren
 	 */
-	public function getErnteAnteile() : array {
-		return empty( $this->ernteanteile )
-					? array( $this->getErnteAnteilIntern( new DateTime(), true ) )
-					: $this->ernteanteile;
+	public function getErnteanteile( bool $emptyAllowed = false ) : array {
+		$ernteanteile = $this->getMeta( self::META_KEY_ERNTEANTEILE, [] );
+		return empty( $ernteanteile ) && !$emptyAllowed
+					? array( $this->getErnteanteilIntern( new DateTime(), true ) )
+					: $ernteanteile;
 	}
 
 	/**
 	 * Fügt ein Ernteanteil-Objekt hinzu und räumt dabei gleichzeitig auf.
 	 */
-	public function addErnteAnteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
-		$this->ernteanteile[] = $ernteanteil;
-		sort( $this->ernteanteile );
+	public function addErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
+		$ernteanteile = $this->getErnteanteile( true );
+		$ernteanteile[] = $ernteanteil;
+		sort( $ernteanteile );
 
 		// Elemente entfernen, die zu weit in der Vergangenheit liegen
 		$letzterEintrag = null;
-		foreach ( $this->ernteanteile as $aktEintrag ) {
+		foreach ( $ernteanteile as $aktEintrag ) {
 			if ( $letzterEintrag === null )
 				$letzterEintrag = $aktEintrag;
 			else if ( $letzterEintrag !== null && $aktEintrag->getGueltigAb() <= new DateTime() ) {
-				$this->ernteanteile = array_values( array_diff( $this->ernteanteile, [ $letzterEintrag ] ) );
+				$ernteanteile = array_values( array_diff( $ernteanteile, [ $letzterEintrag ] ) );
 				$letzterEintrag = $aktEintrag;
 			} else {
 				break;
 			}
 		}
+		$this->setMeta( self::META_KEY_ERNTEANTEILE, $ernteanteile );
+	}
+
+	/**
+	 * Updated das übergebene Objekt und speichert es in der Datenbank.
+	 */
+	public function updateErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
+		$ernteanteile = $this->getErnteanteile( true );
+		foreach ( $ernteanteile as $aktEintrag ) {
+			if ( $aktEintrag->getGueltigAb() == $ernteanteil->getGueltigAb() ) {
+				$ernteanteile = array_values( array_diff( $ernteanteile, [ $aktEintrag ] ) );
+				$ernteanteile[] = $ernteanteil;
+				sort( $ernteanteile );
+				break;
+			}
+		}
+		$this->setMeta( self::META_KEY_ERNTEANTEILE, $ernteanteile );
+	}
+
+	/**
+	 * Entfernt alle Ernteanteile
+	 */
+	public function removeErnteanteile() : void {
+		$this->setMeta( self::META_KEY_ERNTEANTEILE, null );
 	}
 
 	/**
@@ -192,17 +247,17 @@ final class SOLAWI_Mitbauer {
 	 * 
 	 * Wird kein passender/letzter Ernteanteil gefunden, wird ein leeres Ernteanteil-Objekt in diesen Mitbauern gespeichert und zurückgegeben.
 	 */
-	public function getErnteAnteilIntern( DateTime $zeitpunkt, bool $passend = false ) : SOLAWI_MitbauerErnteanteil {
+	public function getErnteanteilIntern( DateTime $zeitpunkt, bool $passend = false ) : SOLAWI_MitbauerErnteanteil {
 		$letzterAnteil = null;
 		// Die Anteile sind von alt zu neu sortiert, deshalb kann das einfach so mit der Schleife gemacht werden
 		// Der letzte Eintrag, der die Bedingung erfüllt, ist der richtige
-		foreach ( $this->ernteanteile as $aktAnteil )
+		foreach ( $this->getErnteanteile( true ) as $aktAnteil )
 			if ( (!$passend && $aktAnteil->getGueltigAb() <= $zeitpunkt)
 					|| ($passend && $aktAnteil->getGueltigAb() == $zeitpunkt) )
 				$letzterAnteil = $aktAnteil;
 		if ( $letzterAnteil === null ) {
 			$letzterAnteil = new SOLAWI_MitbauerErnteanteil( $zeitpunkt );
-			$this->addErnteAnteil( $letzterAnteil );
+			$this->addErnteanteil( $letzterAnteil );
 		}
 		return $letzterAnteil;
 	}
@@ -211,43 +266,104 @@ final class SOLAWI_Mitbauer {
 	 * Gibt die Ernteanteile für den übergebenen Bereich zurück.
 	 * @return 0, 0.5, 1 ...
 	 */
-	public function getErnteAnteil( SOLAWI_Bereich $bereich, DateTime $zeitpunkt ) : float {
-		return $this->getErnteAnteilIntern( $zeitpunkt )->getAnzahl( $bereich );
+	public function getErnteanteil( SOLAWI_Bereich $bereich, DateTime $zeitpunkt ) : float {
+		return $this->getErnteanteilIntern( $zeitpunkt )->getAnzahl( $bereich );
 	}
 
 	/**
 	 * Gibt zurück, ob der Mitbauer Ernteanteile hat
 	 * @param $bereiche entweder ein SOLAWI_Bereich, oder ein Array von Bereichen
 	 */
-	public function hasErnteAnteile( SOLAWI_Bereich|array $bereiche = null, DateTime $zeitpunkt ) : bool {
+	public function hasErnteanteile( SOLAWI_Bereich|array $bereiche = null, DateTime $zeitpunkt ) : bool {
 		if ( $bereiche === null )
 			$bereiche = SOLAWI_Bereich::values();
 		else if ( $bereiche instanceof SOLAWI_Bereich )
 			$bereiche = array( $bereiche );
 		foreach( $bereiche as $bereich )
-			if ( $this->getErnteAnteil( $bereich, $zeitpunkt ) > 0 )
+			if ( $this->getErnteanteil( $bereich, $zeitpunkt ) > 0 )
 				return true;
 		return false;
-	}
-	
-	public function getVerteilstation() : SOLAWI_Verteilstation {
-		return $this->verteilstation;
-	}
-	
-	public function setVerteilstation( SOLAWI_Verteilstation $verteilstation ) {
-		$this->verteilstation = $verteilstation;
 	}
 
 	/**
 	 * Gibt alle Stichtage zurück, die in der Zukunft liegen
 	 * und an denen dieser Mitbauer seinen Ernteanteil ändern wird.
 	 */
-	public function getZukuenftigeStichtageFuerErnteAnteile() : array {
+	public function getZukuenftigeStichtageFuerErnteanteile() : array {
 		$result = array();
-		foreach( $this->ernteanteile as $ernteanteil ) {
+		foreach( $this->getErnteanteile() as $ernteanteil ) {
 			if ( $ernteanteil->getGueltigAb() > new DateTime() )
 				$result[] = $ernteanteil->getGueltigAb();
 		}
 		return $result;
+	}
+	
+	public function getVerteilstation() : SOLAWI_Verteilstation {
+		$stationID = $this->getMeta( self::META_KEY_VERTEILSTATION, '0' );
+		return SOLAWI_Verteilstation::valueOf( intval( $stationID ) );
+	}
+	
+	public function setVerteilstation( SOLAWI_Verteilstation $verteilstation ) {
+		$this->setMeta( self::META_KEY_VERTEILSTATION, $verteilstation->getId() );
+	}
+
+	public function getTelefonnummer() : string|null {
+		return $this->getMeta( self::META_KEY_TELEFON, null );
+	}
+	
+	public function setTelefonnummer( string|null $telefonnummer ) {
+		$this->setMeta( self::META_KEY_TELEFON, $telefonnummer );
+	}
+
+	public function getTelefonnummerAsHtmlString() : string {
+		$tel = $this->getTelefonnummer();
+		return $tel != null ? "<a href='tel:$tel'>$tel</a>" : "";
+	}
+
+	public function getAdresse() : string|null {
+		return $this->getMeta( self::META_KEY_ADRESSE, null );
+	}
+	
+	public function setAdresse( string|null $adresse ) {
+		$this->setMeta( self::META_KEY_ADRESSE, $adresse );
+	}
+
+	public function getBemerkung() : string|null {
+		return $this->getMeta( self::META_KEY_BEMERKUNG, null );
+	}
+	
+	public function setBemerkung( string|null $bemerkung ) {
+		$this->setMeta( self::META_KEY_BEMERKUNG, $bemerkung );
+	}
+	
+	/**
+	 * Gibt zurück, ob der Nutzer bereits initialisiert ist
+	 */
+	public function isRolleInitialisiert() : int {
+		$value = get_user_meta( $this->getId(), self::META_KEY_ROLLEN, true );
+		return $value !== false && $value !== '';
+	}
+
+	/**
+	 * Gibt das Objekt zum übergebenen Nutzer zurück. ungleich null
+	 */
+	private function getRollen() : int {
+		$value = $this->getMeta( self::META_KEY_ROLLEN, '0' );
+		return intval( $value );
+	}
+
+	public function setRollen( array $rollen ) : void {
+		$value = 0;
+		foreach( $rollen as $rolle ) {
+			$value = $value | $rolle->getId();
+		}
+		$this->setMeta( self::META_KEY_ROLLEN, $value );
+	}
+
+	/**
+	 * Gibt zurück, ob der übergebene Nutzer die übergebene Rolle hat
+	 */
+	public function hasRolle( SOLAWI_Rolle $rolle ) : bool {
+		return ( $this->getRollen() & $rolle->getId() ) > 0;
 	}
 }

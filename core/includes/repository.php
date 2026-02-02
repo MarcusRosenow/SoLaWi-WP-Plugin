@@ -57,22 +57,6 @@ final class SOLAWI_Repository {
 	 * Wird beim Aktivieren des Plugins aufgerufen
 	 */
 	public function createTables() : void {
-		// Tabelle wp_solawi_mitbauer
-		$columns = [];
-		$columns[ "verteilstation" ] = "int(11) DEFAULT 0 NOT NULL";
-		$this->createTable( $this->tableMitbauer, $columns);
-		
-		// Tabelle wp_solawi_mitbauer2ernteanteil
-		$columns = [];
-		$columns[ "id" ] = "int(11) NOT NULL AUTO_INCREMENT";
-		$columns[ "mitbauer_id" ] = "int(11) NOT NULL";
-		$columns[ "gueltig_ab" ] = "datetime NOT NULL";
-		foreach ( SOLAWI_Bereich::values() as $bereich ) {
-			$columns[ "anteil_" . $bereich->getDbName() ] = "decimal(4, 1) NOT NULL";
-			$columns[ "preis_" . $bereich->getDbName() ] = "decimal(6, 2) NOT NULL";
-		}
-		$this->createTable( $this->tableMitbauer2ernteanteil, $columns);
-
 		// Tabelle wp_solawi_verteilstation
 		$this->createTable( $this->tableVerteilstation, [ "name" => "varchar(255) NOT NULL" ] );
 		$this->save( new SOLAWI_Verteilstation( 0, "Klein Trebbow" ) );
@@ -128,11 +112,10 @@ final class SOLAWI_Repository {
 			$columns[ "preis_" . $bereich->getDbName() ] = "decimal(6, 2) NOT NULL";
 		}
 		$this->createTable( $this->tableBieterverfahrenGebot, $columns );
-
-		// Tabelle wp_solawi_user2rolle
-		$columns = [];
-		$columns[ "rollen" ] = "int(11) NOT NULL";
-		$this->createTable( $this->tableUser2Rolle, $columns);
+		
+		global $wpdb;
+		$wpdb->hide_errors();
+		$wpdb->query( "DROP TABLE " . $this->tableUser2Rolle );
 	}
 	
 	/**
@@ -182,22 +165,16 @@ final class SOLAWI_Repository {
 	/**
 	 * Speichert eine Entity
 	 */
-	public function save( SOLAWI_Mitbauer|
-	    					SOLAWI_Verteilstation|
+	public function save(   SOLAWI_Verteilstation|
 							SOLAWI_Verteiltag|
 							SOLAWI_Verteiltag2Mitbauer|
 							SOLAWI_Bieterverfahren|
-							SOLAWI_BieterverfahrenGebot|
-							SOLAWI_User2Rolle $entity ) : int|false {
+							SOLAWI_BieterverfahrenGebot $entity ) : int|false {
 		$table = $this->getTableName( $entity );
 		$attributes = array();
 		$attributes[ "id" ] = $entity->getId();
 
-		if ( $entity instanceof SOLAWI_Mitbauer ) {
-			$attributes[ "verteilstation" ] = $entity->getVerteilstation()->getId();
-			$this->saveMitbauerErnteanteile( $entity );
-
-		} elseif ( $entity instanceof SOLAWI_Verteilstation ) {
+		if ( $entity instanceof SOLAWI_Verteilstation ) {
 			$attributes[ "name" ] = $entity->getName();
 
 		} elseif ( $entity instanceof SOLAWI_Verteiltag ) {
@@ -242,8 +219,6 @@ final class SOLAWI_Repository {
 				$attributes[ "preis_" . $bereich->getDbName() ] = $entity->getPreis( $bereich );	
 			}
 			
-		} else if ( $entity instanceof SOLAWI_User2Rolle ) {
-			$attributes[ "rollen" ] = $entity->getRollen();
 		}
 
 
@@ -255,19 +230,12 @@ final class SOLAWI_Repository {
 	/**
 	 * Gibt den Tabellennamen für die übergebene Entity zurück
 	 */
-	private function getTableName( SOLAWI_Mitbauer|
-									SOLAWI_MitbauerErnteanteil|
-									SOLAWI_Verteilstation|
+	private function getTableName( 	SOLAWI_Verteilstation|
 									SOLAWI_Verteiltag|
 									SOLAWI_Verteiltag2Mitbauer|
 									SOLAWI_Bieterverfahren|
-									SOLAWI_BieterverfahrenGebot|
-									SOLAWI_User2Rolle $entity ) : string {
-		if ( $entity instanceof SOLAWI_Mitbauer ) {
-    		return $this->tableMitbauer;
-		} elseif ( $entity instanceof SOLAWI_MitbauerErnteanteil ) {
-    		return $this->tableMitbauer2ernteanteil;
-		} elseif ( $entity instanceof SOLAWI_Verteilstation ) {
+									SOLAWI_BieterverfahrenGebot $entity ) : string {
+		if ( $entity instanceof SOLAWI_Verteilstation ) {
     		return $this->tableVerteilstation;
 		} elseif ( $entity instanceof SOLAWI_Verteiltag ) {
     		return $this->tableVerteiltag;
@@ -277,8 +245,6 @@ final class SOLAWI_Repository {
     		return $this->tableBieterverfahren;
 		} elseif ( $entity instanceof SOLAWI_BieterverfahrenGebot ) {
     		return $this->tableBieterverfahrenGebot;
-		} elseif ( $entity instanceof SOLAWI_User2Rolle ) {
-    		return $this->tableUser2Rolle;
 		}
 	}
 	
@@ -287,14 +253,15 @@ final class SOLAWI_Repository {
 	// -----------------------------------------------------------------------------------------
 	
 	/**
-	 * Gibt ein Array von Mitbauern zurück
+	 * Migriert die Mitbauern aus der alten Tabelle ...
 	 */
-	public function getMitbauern() : array {
+	public function migriereMitbauern() : void {
 		global $wpdb;
-		$sql = "SELECT u.id user_id, u.display_name, u.user_email email, r.rollen, m.*
+		$wpdb->hide_errors();
+		$sql = "SELECT u.id user_id, r.rollen, m.*
 			FROM {$this->tableUsers} u
-			     LEFT OUTER JOIN {$this->tableMitbauer} m ON m.id = u.ID
-				 LEFT OUTER JOIN {$this->tableUser2Rolle} r ON r.id = u.ID
+			     LEFT JOIN {$this->tableMitbauer} m ON m.id = u.ID
+				 LEFT JOIN {$this->tableUser2Rolle} r ON r.id = u.ID
 			ORDER BY u.display_name";
 		$dbResultsMitbauern = $wpdb->get_results( $sql, ARRAY_A );
 		$sql = "SELECT *
@@ -302,10 +269,10 @@ final class SOLAWI_Repository {
 			ORDER BY gueltig_ab";
 		$dbResultsErnteanteile = $wpdb->get_results( $sql, ARRAY_A );
 		
-		$result = array();
 		foreach ( $dbResultsMitbauern as $row ) {
-			$mitbauer = new SOLAWI_Mitbauer( intval( $row["user_id"] ), $row["display_name"], $row["email"] );
-			$ernteanteileMitbauer = $this->filterErnteAnteile( $mitbauer->getId(), $dbResultsErnteanteile );
+			$mitbauer = new SOLAWI_Mitbauer( intval( $row["user_id"] ) );
+			$mitbauer->removeErnteanteile();
+			$ernteanteileMitbauer = $this->filterErnteanteile( $mitbauer->getId(), $dbResultsErnteanteile );
 			foreach ( $ernteanteileMitbauer as $rowErnteanteil ) {
 				$ernteanteil = new SOLAWI_MitbauerErnteanteil( new DateTime( $rowErnteanteil['gueltig_ab'] ) );
 				foreach ( SOLAWI_Bereich::values() as $bereich ) {
@@ -315,51 +282,24 @@ final class SOLAWI_Repository {
 						$ernteanteil->setPreis( $bereich, $rowErnteanteil["preis_{$bereich->getDbName()}"] );
 					}
 				}
-				$mitbauer->addErnteAnteil( $ernteanteil );
+				$mitbauer->addErnteanteil( $ernteanteil );
 			}
 			$station = SOLAWI_Verteilstation::valueOf( intval( $row["verteilstation"] ) );
 			$mitbauer->setVerteilstation( $station );
-			// user2rolle muss angepasst werden, wenn noch kein Rolleneintrag existiert (neuer Nutzer)
-			if ( $row[ "rollen" ] === null ) {
-				$this->save( new SOLAWI_User2Rolle( $mitbauer->getId(), SOLAWI_Rolle::MITBAUER->getId() ) );
-				SOLAWI_User2Rolle::clearCache();
-			} elseif ( ( intval( $row[ "rollen" ] ) & SOLAWI_Rolle::MITBAUER->getId() ) == 0) {
+			if ( ( intval( $row[ "rollen" ] ) & SOLAWI_Rolle::MITBAUER->getId() ) == 0) {
 				continue; // Dieser Mitbauer ist gar kein Mitbauer (mehr)
 			}
-			$result[] = $mitbauer;
-
 		}
-		return $result;
+		$wpdb->query( "DROP TABLE " . $this->tableMitbauer );
+		$wpdb->query( "DROP TABLE " . $this->tableMitbauer2ernteanteil );
 	}
 	
-	private function filterErnteAnteile( int $mitbauer_id, array $dbResultsErnteanteile ) : array {
+	private function filterErnteanteile( int $mitbauer_id, array $dbResultsErnteanteile ) : array {
 		$result = array();
 		foreach ( $dbResultsErnteanteile as $row )
 			if ( $row[ "mitbauer_id" ] == $mitbauer_id )
 				$result[] = $row;
 		return $result;
-	}
-
-	/**
-	 * Speichert die an den Mitbauer angehängte Ernteanteile
-	 */
-	private function saveMitbauerErnteanteile( SOLAWI_Mitbauer $mitbauer ) : void {
-		global $wpdb;
-		$table = $this->tableMitbauer2ernteanteil;
-		// alle bisherigen Ernteanteile löschen
-		$wpdb->delete( $table, array( 'mitbauer_id' => $mitbauer->getId() ) );
-		// alle jetzigen Ernteanteile speichern
-		$ernteanteile = $mitbauer->getErnteanteile();
-		foreach ( $ernteanteile as $ernteanteil ) {
-			$attributes = array();
-			$attributes[ "mitbauer_id" ] = $mitbauer->getId();
-			$attributes[ "gueltig_ab" ] = SOLAWI_formatDatum( $ernteanteil->getGueltigAb(), true );
-			foreach ( SOLAWI_Bereich::values() as $bereich ) {
-				$attributes[ "anteil_" . $bereich->getDbName() ] = $ernteanteil->getAnzahl( $bereich );
-				$attributes[ "preis_" . $bereich->getDbName() ] = $ernteanteil->getPreis( $bereich );
-			}
-			$wpdb->replace( $table, $attributes);
-		}
 	}
 
 	// -----------------------------------------------------------------------------------------
@@ -496,25 +436,6 @@ final class SOLAWI_Repository {
 				$entity->setAnzahl( $bereich, floatval( $row[ "anteil_" . $bereich->getDbName() ] ) );
 				$entity->setPreis( $bereich, floatval( $row[ "preis_" . $bereich->getDbName() ] ) );
 			}
-			$result[] = $entity;
-		}
-		return $result;
-	}
-
-	// -----------------------------------------------------------------------------------------
-	// --- User2Rolle --------------------------------------------------------------------------
-	// -----------------------------------------------------------------------------------------
-
-	/**
-	 * Gibt ein array aller SOLAWI_User2Rolle zurück
-	 */
-	public function getUser2Rollen() : array {
-		global $wpdb;
-		$sql = "SELECT id, rollen FROM {$this->tableUser2Rolle}";
-		$dbResults = $wpdb->get_results( $sql, ARRAY_A );
-		$result = array();
-		foreach ( $dbResults as $row ) {
-			$entity = new SOLAWI_User2Rolle( intval( $row["id"] ), intval( $row['rollen'] ) );
 			$result[] = $entity;
 		}
 		return $result;

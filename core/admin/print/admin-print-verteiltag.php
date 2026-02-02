@@ -38,7 +38,7 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
         $result .= "<table border width='100%'><tr><th width='50%'>Name</th><th width='25%'>Anzahl Anteile</th><th width='25%'>Abgeholt</th>";
         $relevanteMitbauern = [];
         foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
-            $anzahlErnteanteile = $mitbauer->getErnteAnteil( $bereich, $tag->getDatum() );
+            $anzahlErnteanteile = $mitbauer->getErnteanteil( $bereich, $tag->getDatum() );
             if ( $anzahlErnteanteile == 0 )
                 continue;
             $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueOf( $tag, $mitbauer );
@@ -67,7 +67,7 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
         $relevanteMitbauern = [];
         $summe = 0;
         foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
-            $anzahlErnteanteile = $mitbauer->getErnteAnteil( $bereich, $tag->getDatum() );
+            $anzahlErnteanteile = $mitbauer->getErnteanteil( $bereich, $tag->getDatum() );
             if ( $anzahlErnteanteile == 0 )
                 continue;
             $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueOf( $tag, $mitbauer );

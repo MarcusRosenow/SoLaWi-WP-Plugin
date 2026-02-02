@@ -71,7 +71,7 @@ final class SOLAWI_AdminPrintBieterverfahren extends SOLAWI_AbstractAdminPrint {
         foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
             if ( $verfahren->getGebot( $runde, $mitbauer ) != null )
                 continue;
-            if ( $mitbauer->hasErnteAnteile( null, $verfahren->getStartDerSaison() ) )
+            if ( $mitbauer->hasErnteanteile( null, $verfahren->getStartDerSaison() ) )
                 $result .= $this->getHtmlZeileOhneGebot( $verfahren, $runde, $mitbauer );
         }
         $result .= "</table></div>";

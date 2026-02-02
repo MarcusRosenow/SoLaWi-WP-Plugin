@@ -40,7 +40,7 @@ final class SOLAWI_ShortcodeVerteilgruppe extends SOLAWI_AbstractShortcode {
             $summe[ $bereich->getName() ] = 0;
         $relevanteMitbauern = [];
         foreach ( $mitbauern as $bauer ) {
-            if ( !$bauer->hasErnteAnteile( null, $verteiltag->getDatum() ) )
+            if ( !$bauer->hasErnteanteile( null, $verteiltag->getDatum() ) )
                 continue;
             $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueOf( $verteiltag, $bauer );
             $isStandardAbholung = $mitbauer->getVerteilstation() === $vt2mb->getVerteilstation();
@@ -93,7 +93,7 @@ final class SOLAWI_ShortcodeVerteilgruppe extends SOLAWI_AbstractShortcode {
         $cssClass = $cssClass !== null ? " class='$cssClass'" : "";
         $result = "<tr$cssClass><td class='left'>" . $mitbauer->getName() . "</td>";
         foreach ( $verteiltag->getVerteilungen() as $bereich ) {
-            $anteil = $mitbauer->getErnteAnteilIntern( $verteiltag->getDatum() )->getAsHtmlString( $bereich );
+            $anteil = $mitbauer->getErnteanteilIntern( $verteiltag->getDatum() )->getAsHtmlString( $bereich );
             $result .= "<td class='right'>$anteil</td>";
         }
         $result .= "</tr>";

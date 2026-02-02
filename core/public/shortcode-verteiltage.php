@@ -55,7 +55,7 @@ final class SOLAWI_ShortcodeVerteiltage extends SOLAWI_AbstractShortcode {
         // Nur zukünftige Verteiltage sind bearbeitbar
         if ( $tag->getDatum() > new DateTime() ) {
             $result .= "<form method='POST'>";
-            if ( $mitbauer->hasErnteAnteile( $tag->getVerteilungen(), $tag->getDatum() ) ) {
+            if ( $mitbauer->hasErnteanteile( $tag->getVerteilungen(), $tag->getDatum() ) ) {
                 $result .= "<p class='has-text-align-center'><b>Ich hole meine Kiste hier ab:</b><br>";
                 $result .= $this->getHtmlAuswaehlbareVerteilstationen( $id, $mitbauer, $vt2mb->getVerteilstation() );
                 $result .= "<br>Andere Station? Anderes Anliegen? Dann melde dich <a href='" . $this->getKontaktFormularUrl( $tag, $mitbauer ) . "'>HIER</a>.</p>";
