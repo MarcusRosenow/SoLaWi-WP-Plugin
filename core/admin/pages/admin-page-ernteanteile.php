@@ -174,9 +174,8 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		$id = $mitbauer->getId();
 		$widget = new SOLAWI_WidgetRegisterkarten( strval( $id ) );
 		$widget->setStyle( SOLAWI_WidgetRegisterkarten::STYLE_BACKGROUND );
-		$ernteanteile = $mitbauer->getErnteanteile();
-		foreach( $ernteanteile as $ernteanteil ) {
-			$title = $ernteanteile[0] == $ernteanteil ? "Aktuell" : ( "Ab " . SOLAWI_formatDatum( $ernteanteil->getGueltigAb() ) );
+		foreach( $mitbauer->getErnteanteile() as $ernteanteil ) {
+			$title =  $ernteanteil->getGueltigAb() < new DateTime() ? "Aktuell" : ( "Ab " . SOLAWI_formatDatum( $ernteanteil->getGueltigAb() ) );
 			$body = $this->getHtmlFuerErnteanteil( $mitbauer, $ernteanteil, $nurLesen );
 			$widget->add( "regkarte-$id-" . SOLAWI_formatDatum( $ernteanteil->getGueltigAb() ), $title, $body );
 		}
@@ -195,7 +194,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		$result = "";
 		if ( $ernteanteil == null && !$nurLesen ) {
 			$onInput = $this->getOnInputEventHtml( $mitbauer->getId() );
-			$result .= "Gültig ab: <input type='date' name='anteilNeuDatum' $onInput/><br>";
+			$result .= "Ab: <input type='date' name='anteilNeuDatum' $onInput/><br>";
 		}
 		$key = $ernteanteil == null ? "neu" : SOLAWI_formatDatum( $ernteanteil->getGueltigAb(), false );
 		$layout = new SOLAWI_WidgetKachellayout( $nurLesen ? 1 : 3 );
@@ -213,7 +212,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 				// damit beim Senden der Daten alles läuft
 				$htmlFieldName = "anteil$bereich_slug" . $key;
 				$layout->add( null, "<input type='number' id='$htmlFieldId' name='$htmlFieldName' step='0.5' min='0' max='10' value='$bereich_anteil' $onInput/>" );
-				$layout->add( null, $bereich->getName() );
+				$layout->add( null, $bereich->getShortName() );
 				// Der Preis
 				$htmlFieldName = "preis$bereich_slug" . $key;
 				$onInput = $this->getOnInputEventHtml( $mitbauer->getId() );

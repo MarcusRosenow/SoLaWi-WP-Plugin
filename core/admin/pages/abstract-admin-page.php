@@ -48,6 +48,7 @@ abstract class SOLAWI_AbstractAdminPage {
 		$this->layout->setStyle( SOLAWI_WidgetKachellayout::STYLE_BORDER );
 		$this->initInhalt();
 		echo $this->layout->getHtml();
+		echo $this->getEndeHtml();
 	}
 
 	final protected function addKachel( int|string|null $id, string $kachel, bool $normaleKachel = true ) : void {
@@ -66,6 +67,12 @@ abstract class SOLAWI_AbstractAdminPage {
 		return "<p>Filter: <input type='text' id='jsfilter' oninput='filterDiv(\"jsfilter\")'/>";
 	}
 
+	/**
+	 * Das HTML, welches nach dem Kachellayout am Ende der Seite stehen soll.
+	 */
+	protected function getEndeHtml() : string {
+		return "";
+	}
 	/**
 	 * Gibt den String für den Submit/Reset-Button zurück.
 	 */

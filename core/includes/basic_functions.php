@@ -100,6 +100,8 @@ function SOLAWI_isGueltigerPreis( $wert ) : bool {
  */
 function SOLAWI_hasRolle( SOLAWI_Rolle ...$rollen ) : bool {
 	$user = SOLAWI_Mitbauer::getAktuellenMitbauer();
+	if ( $user == null )
+		return false;
 	foreach( $rollen as $rolle )
 		if ( $user->hasRolle( $rolle ) )
 			return true;

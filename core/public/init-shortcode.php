@@ -13,7 +13,8 @@ final class SOLAWI_InitShortcode {
             new SOLAWI_ShortcodeBieterverfahren(),
             new SOLAWI_ShortcodeErnteanteile(),
             new SOLAWI_ShortcodeVerteilgruppe(),
-            new SOLAWI_ShortcodeVerteiltage()
+            new SOLAWI_ShortcodeVerteiltage(),
+            new SOLAWI_ShortcodeStammdaten()
         ];
         foreach ( $shortcodeClasses as $class ) {
             $this->shortcodes[ $class->getKey() ] = $class;

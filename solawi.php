@@ -101,7 +101,7 @@ add_action( 'upgrader_process_complete', 'SOLAWI_UPGRADE',10, 2);
  * Initialisiert einen neuen Nutzer
  */
 function SOLAWI_INIT_USER( int $userId ) {
-	SOLAWI_UserInitializer::initUser( $userId );
+	SOLAWI_UserInitializer::initUser( new SOLAWI_Mitbauer( $userId ) );
 }
 add_action( 'user_register', 'SOLAWI_INIT_USER' );
 

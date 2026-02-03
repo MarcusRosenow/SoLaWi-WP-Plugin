@@ -65,20 +65,33 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
 
     private function getHtmlSummeAnteileInsgesamt( SOLAWI_Verteiltag $tag, SOLAWI_Bereich $bereich ) : string {
         $relevanteMitbauern = [];
-        $summe = 0;
-        foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
+        $gemueseErnter = [];
+        $kistenPacker = [];
+        $summe = $tag->getAnzahlUrlaubskisten( $bereich );
+        foreach ( SOLAWI_Mitbauer::values( null, true ) as $mitbauer ) {
+            $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueOf( $tag, $mitbauer );
+            if ( $vt2mb->isGemueseErnten() )
+                $gemueseErnter[] = $mitbauer;
+            if ( $vt2mb->isKistenPacken() )
+                $kistenPacker[] = $mitbauer;
             $anzahlErnteanteile = $mitbauer->getErnteanteil( $bereich, $tag->getDatum() );
             if ( $anzahlErnteanteile == 0 )
                 continue;
-            $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueOf( $tag, $mitbauer );
-            if ( $vt2mb->getVerteilstation() === null )
-                continue;
-            $relevanteMitbauern[] = $mitbauer;
-            $summe += $anzahlErnteanteile;
+            if ( $vt2mb->getVerteilstation() !== null ) {
+                $relevanteMitbauern[] = $mitbauer;
+                $summe += $anzahlErnteanteile;
+            }
         }
         $summeJeAnteil = SOLAWI_Mitbauer::getHtmlSummierteAnteile( $relevanteMitbauern, $tag, $bereich, "<br>", true );
-        $result = "<p>" . SOLAWI_formatAnzahl( $summe ) . " zu verteilende Anteile insgesamt an diesem Tag. Davon:<br>";
-        $result .= "$summeJeAnteil</p>";
+        $result = "<h2>Zusammenfassung</h2>";
+        $result .= SOLAWI_formatAnzahl( $summe ) . " zu verteilende Anteile insgesamt an diesem Tag. Davon:<br>";
+        $result .= $summeJeAnteil;
+        if ( $bereich === SOLAWI_Bereich::GEMUESE ) {
+            $result .= "<h3>Helfer beim Ernten</h3>";
+            $result .= SOLAWI_arrayToString( $gemueseErnter, "getName" );
+            $result .= "<h3>Helfer beim Packen</h3>";
+            $result .= SOLAWI_arrayToString( $kistenPacker, "getName" );
+        }
         return $result;
     }
 }

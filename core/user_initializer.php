@@ -28,7 +28,7 @@ final class SOLAWI_UserInitializer {
 	 */
 	static function initUser( SOLAWI_Mitbauer $user ) : void {
 		if ( !$user->isRolleInitialisiert() ) {
-			if ( is_super_admin( $userId ) )
+			if ( is_super_admin( $user->getId() ) )
 				$user->setRollen( array( SOLAWI_Rolle::MITBAUER, SOLAWI_Rolle::ADMINISTRATOR ) );
 			else
 				$user->setRollen( array( SOLAWI_Rolle::MITBAUER ) );

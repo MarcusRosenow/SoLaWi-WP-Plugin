@@ -14,7 +14,9 @@ final class SOLAWI_Mitbauer {
 
 	const META_KEY_TELEFON = 'solawi_telefon';
 
-	const META_KEY_ADRESSE = 'solawi_adresse';
+	const META_KEY_STRASSE = 'solawi_strasse';
+	
+	const META_KEY_ORT = 'solawi_ort';
 
 	const META_KEY_BEMERKUNG = 'solawi_bemerkung';
 
@@ -118,8 +120,8 @@ final class SOLAWI_Mitbauer {
 		$anteile = $this->getErnteanteile();
 		$result = "<table class='solawi'><tr class='stark'><td></td>";
 		foreach ( $anteile as $anteil ) {
-			$titel = $anteile[0] === $anteil ? "Aktuell" : ("Ab dem<br>" .SOLAWI_formatDatum( $anteil->getGueltigAb() ) );
-			$result .= "<td class='center'>$titel</td>";
+			$titel =  $anteil->getGueltigAb() < new DateTime() ? "Aktuell" : ( "Ab dem<br>" . SOLAWI_formatDatum( $anteil->getGueltigAb() ) );
+			$result .= "<td class='right'>$titel</td>";
 		}
 		$result .= "</tr>";
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
@@ -182,22 +184,17 @@ final class SOLAWI_Mitbauer {
 
 	/**
 	 * Gibt die Ernteanteile für diesen Mitbauern zurück.
-	 * Wurden bisher noch keine Ernteanteile hinzugefügt, wird ein Array mit einem Element mit aktuellem Tagesdatum geliefert.
-	 * 
-	 * TODO $emptyAllowed wegoperieren
+	 * Kann auch ein leeres Array sein.
 	 */
-	public function getErnteanteile( bool $emptyAllowed = false ) : array {
-		$ernteanteile = $this->getMeta( self::META_KEY_ERNTEANTEILE, [] );
-		return empty( $ernteanteile ) && !$emptyAllowed
-					? array( $this->getErnteanteilIntern( new DateTime(), true ) )
-					: $ernteanteile;
+	public function getErnteanteile() : array {
+		return $this->getMeta( self::META_KEY_ERNTEANTEILE, [] );
 	}
 
 	/**
 	 * Fügt ein Ernteanteil-Objekt hinzu und räumt dabei gleichzeitig auf.
 	 */
 	public function addErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
-		$ernteanteile = $this->getErnteanteile( true );
+		$ernteanteile = $this->getErnteanteile();
 		$ernteanteile[] = $ernteanteil;
 		sort( $ernteanteile );
 
@@ -220,7 +217,7 @@ final class SOLAWI_Mitbauer {
 	 * Updated das übergebene Objekt und speichert es in der Datenbank.
 	 */
 	public function updateErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
-		$ernteanteile = $this->getErnteanteile( true );
+		$ernteanteile = $this->getErnteanteile();
 		foreach ( $ernteanteile as $aktEintrag ) {
 			if ( $aktEintrag->getGueltigAb() == $ernteanteil->getGueltigAb() ) {
 				$ernteanteile = array_values( array_diff( $ernteanteile, [ $aktEintrag ] ) );
@@ -247,18 +244,14 @@ final class SOLAWI_Mitbauer {
 	 * 
 	 * Wird kein passender/letzter Ernteanteil gefunden, wird ein leeres Ernteanteil-Objekt in diesen Mitbauern gespeichert und zurückgegeben.
 	 */
-	public function getErnteanteilIntern( DateTime $zeitpunkt, bool $passend = false ) : SOLAWI_MitbauerErnteanteil {
+	public function getErnteanteilIntern( DateTime $zeitpunkt, bool $passend = false ) : SOLAWI_MitbauerErnteanteil|null {
 		$letzterAnteil = null;
 		// Die Anteile sind von alt zu neu sortiert, deshalb kann das einfach so mit der Schleife gemacht werden
 		// Der letzte Eintrag, der die Bedingung erfüllt, ist der richtige
-		foreach ( $this->getErnteanteile( true ) as $aktAnteil )
+		foreach ( $this->getErnteanteile() as $aktAnteil )
 			if ( (!$passend && $aktAnteil->getGueltigAb() <= $zeitpunkt)
 					|| ($passend && $aktAnteil->getGueltigAb() == $zeitpunkt) )
 				$letzterAnteil = $aktAnteil;
-		if ( $letzterAnteil === null ) {
-			$letzterAnteil = new SOLAWI_MitbauerErnteanteil( $zeitpunkt );
-			$this->addErnteanteil( $letzterAnteil );
-		}
 		return $letzterAnteil;
 	}
 
@@ -267,7 +260,8 @@ final class SOLAWI_Mitbauer {
 	 * @return 0, 0.5, 1 ...
 	 */
 	public function getErnteanteil( SOLAWI_Bereich $bereich, DateTime $zeitpunkt ) : float {
-		return $this->getErnteanteilIntern( $zeitpunkt )->getAnzahl( $bereich );
+		$ea = $this->getErnteanteilIntern( $zeitpunkt, false, false );
+		return isset( $ea ) ? $ea->getAnzahl( $bereich ) : 0;
 	}
 
 	/**
@@ -320,12 +314,20 @@ final class SOLAWI_Mitbauer {
 		return $tel != null ? "<a href='tel:$tel'>$tel</a>" : "";
 	}
 
-	public function getAdresse() : string|null {
-		return $this->getMeta( self::META_KEY_ADRESSE, null );
+	public function getStrasse() : string|null {
+		return $this->getMeta( self::META_KEY_STRASSE, null );
 	}
 	
-	public function setAdresse( string|null $adresse ) {
-		$this->setMeta( self::META_KEY_ADRESSE, $adresse );
+	public function setStrasse( string|null $strasse ) {
+		$this->setMeta( self::META_KEY_STRASSE, $strasse );
+	}
+
+	public function getOrt() : string|null {
+		return $this->getMeta( self::META_KEY_ORT, null );
+	}
+	
+	public function setOrt( string|null $ort ) {
+		$this->setMeta( self::META_KEY_ORT, $ort );
 	}
 
 	public function getBemerkung() : string|null {

@@ -28,6 +28,8 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
         $stationId = intval( $postData[ "station" ] );
         $vt2mb = SOLAWI_Verteiltag2Mitbauer::valueById( $id );
     	$vt2mb->setVerteilstation( $stationId >= 0 ? SOLAWI_Verteilstation::valueOf( $stationId ) : null );
+		$vt2mb->setGemueseErnten( isset( $postData[ "gemueseernten" ] ) );
+		$vt2mb->setKistenPacken( isset( $postData[ "kistenpacken" ] ) );
     	SOLAWI_Repository::instance()->save( $vt2mb );
 		$this->mitbauer = $vt2mb->getMitbauer();
 		return new SOLAWI_SavePostdataResult();
@@ -77,8 +79,11 @@ final class SOLAWI_AdminPageVerteiltag2Mitbauer extends SOLAWI_AbstractAdminPage
 		$onInput = $this->getOnInputEventHtml( $vt2mb->getId() );
         $result = "<h2>" . SOLAWI_formatDatum( $tag->getDatum() ) . "</h2>\n";
 		$result .= "<form method='POST'>";
-        $result .= $this->getHtmlAuswaehlbareVerteilstationen( $vt2mb ) . "<br>";
-		// TODO Gemüse ernten und Kisten packen?
+        $result .= $this->getHtmlAuswaehlbareVerteilstationen( $vt2mb ) . "<br><br>";
+		$hilft = $vt2mb->isGemueseErnten() ? " checked" : "";
+		$result .= "<input type='checkbox' name='gemueseernten' $onInput$hilft>Hilft beim Gemüseernten<br>";
+		$hilft = $vt2mb->isKistenPacken() ? " checked" : "";
+		$result .= "<input type='checkbox' name='kistenpacken' $onInput$hilft>Hilft beim Kistenpacken<br><br>";
         $result .= $this->getSubmitButtonHtml( $vt2mb->getId(), false );
         $result .= "</form>\n";
 		return $result;

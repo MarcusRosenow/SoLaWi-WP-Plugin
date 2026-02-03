@@ -60,6 +60,7 @@ final class SOLAWI_Starter {
 		require_once SOLAWI_PLUGIN_DIR . 'core/public/init-shortcode.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/public/shortcode-bieterverfahren.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/public/shortcode-ernteanteile.php';
+		require_once SOLAWI_PLUGIN_DIR . 'core/public/shortcode-stammdaten.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/public/shortcode-verteilgruppe.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/public/shortcode-verteiltage.php';
 		new SOLAWI_InitShortcode();

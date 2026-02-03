@@ -12,6 +12,13 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 	public function getTitel() : string {
 		return "Verteiltage";
 	}
+
+	/**
+	 * Gibt die Anzahl der Spalten für das Layout zurück
+	 */
+	public function getAnzahlSpalten() : int {
+		return 3;
+	}
 	
 	public function savePostdata( int $id, array $postData ) : SOLAWI_SavePostdataResult {
 		if ( !SOLAWI_hasRolle( SOLAWI_Rolle::BAUER, SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) )
@@ -109,6 +116,7 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 		$result = "<input type='checkbox' name='verteilung_$bereichName'$selected $onInput $onClick>&nbsp;" . $bereich->getName() ."<br>";
 		$result .= "<div id='input_$bereichName$id' style='text-align:right'$hidden>";
 		$result .= "<textarea name='text_$bereichName' $onInput style='width:100%;'>{$tag->getText( $bereich )}</textarea><br>";
+		// TODO Urlaubskisten
 		$result .= "Urlaubskisten:&nbsp;<input type='number' min='0' max='99' name='urlaubskisten_$bereichName' value='{$tag->getAnzahlUrlaubskisten( $bereich )}' $onInput/>";
 		$result .= "</div>";
 		return $result;
@@ -125,25 +133,40 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 	private function getHtmlArbeitszeiten( SOLAWI_Verteiltag $tag ) : string {
 		$id = $tag->getId();
 		$onInput = $this->getOnInputEventHtml( $id );
-		$grid = new SOLAWI_WidgetKachellayout( 3 );
+		$grid = new SOLAWI_WidgetKachellayout( 4 );
 		$grid->setWidth( 30 );
 
 		$grid->add( null, "" );
 		$grid->add( null, "Start" );
 		$grid->add( null, "Ende" );
+		$grid->add( null, "" );
 
 		$grid->add( null, "Ernte&nbsp;(Gemüse)" );
 		$grid->add( null, "<input type='time' id='startErnte' name='startErnte' value='{$tag->getStartGemueseErnten()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endeErnte' name='endeErnte' value='{$tag->getEndeGemueseErnten()}' $onInput>" );
+		$grid->add( null, $this->getAnzahlHelfer( $tag, true ) . "&nbsp;Helfer&nbsp;angemeldet" );
 
 		$grid->add( null, "Packen&nbsp;(Gemüse)" );
 		$grid->add( null, "<input type='time' id='startPacken' name='startPacken' value='{$tag->getStartKistenPacken()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endePacken' name='endePacken' value='{$tag->getEndeKistenPacken()}' $onInput>" );
+		$grid->add( null, $this->getAnzahlHelfer( $tag, false ) . "&nbsp;Helfer&nbsp;angemeldet" );
 
 		$grid->add( null, "Verteilung" );
 		$grid->add( null, "<input type='time' id='startVerteilung' name='startVerteilung' value='{$tag->getStartVerteilung()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endeVerteilung' name='endeVerteilung' value='{$tag->getEndeVerteilung()}' $onInput>" );
+		$grid->add( null, "" );
 
 		return $grid->getHtml();
+	}
+
+	private function getAnzahlHelfer( SOLAWI_Verteiltag $tag, bool $zumErnten ) : int {
+		$result = 0;
+		foreach( SOLAWI_Verteiltag2Mitbauer::values( $tag ) as $v2m ) {
+			if ( $zumErnten && $v2m->isGemueseErnten() )
+				$result += 1;
+			elseif ( !$zumErnten && $v2m->isKistenPacken() )
+				$result += 1;
+		}
+		return $result;
 	}
 }

@@ -19,6 +19,15 @@ enum SOLAWI_Bereich {
 		};
 	}
 
+	public function getShortName() : string {
+		return match($this) {
+			SOLAWI_Bereich::FLEISCH => '&#128002;',
+			SOLAWI_Bereich::MOPRO => '&#129371;',
+			SOLAWI_Bereich::GEMUESE => '&#129365;',
+            default => die(),
+		};
+	}
+
 	public function getSimpleName() : string {
 		return match($this) {
 			SOLAWI_Bereich::FLEISCH => 'Fleisch',

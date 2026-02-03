@@ -138,7 +138,7 @@ class SOLAWI_AdminInitializer {
     	$url = admin_url( 'admin.php?page=solawi_admin_abholungjemitbauer' );
     	$wp_admin_bar->add_node([
 	        'id'    => 'solawi',
-    	    'title' => '&#128046; SoLaWi-Admin &#128046;',
+    	    'title' => '&#128046; SoLaWi-Admin',
         	'href'  => $url
     	]);
 	}
