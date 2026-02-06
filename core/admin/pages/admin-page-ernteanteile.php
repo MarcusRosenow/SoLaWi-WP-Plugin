@@ -113,7 +113,9 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		$result .= "<p>$anzahlAktive aktive Mitbauern</p><p>";
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$result .= "<p>" . $anzahlen[ $bereich->getDbName() ] . "x " . $bereich->getName();
-			$result .= "&nbsp;(" . SOLAWI_Mitbauer::getHtmlSummierteAnteile( $mitbauern, $verteiltag, $bereich, ", " ) . ")</p>";
+			$summiert = SOLAWI_Mitbauer::getHtmlSummierteAnteile( $mitbauern, $verteiltag, $bereich, ", " );
+			if ( $summiert != '' )
+				$result .= "&nbsp;($summiert)</p>";
 		}
 		$result .= "</p>";
 		return $result;
@@ -138,8 +140,9 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	 */
 	private function baueMitbauerBlock( SOLAWI_Mitbauer $mitbauer ) : string {
 		$result = "<form method='POST'>";
-		$result .= "<h2>" . $mitbauer->getName() . "</h2>";
-		$result .= "<p>" . $mitbauer->getEmailAsHtmlString() . " " . $mitbauer->getTelefonnummerAsHtmlString() . "</p>";
+		$mail = $mitbauer->getEmailAsHtmlString( true );
+		$phone = $mitbauer->getTelefonnummerAsHtmlString( true );
+		$result .= "<h2>" . $mitbauer->getName() . " $mail $phone</h2>";
 		$nurLesen = !SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER );
 		$result .= $this->getHtmlFuerVerteilstation( $mitbauer, $nurLesen );
 		$result .= $this->getHtmlFuerErnteanteile( $mitbauer, $nurLesen );

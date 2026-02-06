@@ -6,8 +6,6 @@ if ( ! defined( 'ABSPATH' ) )
 
 /**
  * Für die Initialisierung des Backends für die Nutzer-Berechtigungen
- * 
- * TODO Export
  */
 final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 
@@ -32,6 +30,16 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 		$user->setOrt( isset( $postData[ "ort" ] ) ? $postData[ "ort" ] : null );
 		$user->setBemerkung( isset( $postData[ "bemerkung" ] ) ? $postData[ "bemerkung" ] : null );
 		return new SOLAWI_SavePostdataResult( "Erfolgreich gespeichert!" );
+	}
+
+	/**
+	 * Baut das HTML für den Filter
+	 */
+	protected function getFilterHtml() : string {
+		$result = parent::getFilterHtml();
+		$url = ( new SOLAWI_AdminPrintNutzer() )->getUrl();
+		$result.= "<p><a href='$url' target='_blank'>Daten exportieren</a>";
+		return $result;
 	}
 	
 	protected function initInhalt() : void {
@@ -63,10 +71,8 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 		$bemerkung = $nutzer->getBemerkung();
 		$result = "<form method='POST'>";
 		$result .= "<h2>" . $nutzer->getName() . "</h2>";
-		$result .= "<p><a href='mailto:$mail'>$mail</a></p>";
 
 		$grid = new SOLAWI_WidgetKachellayout( 2 );
-		
 
 		$onInput = $this->getOnInputEventHtml( $userId );
 		$rollen = "";
@@ -80,7 +86,10 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 		$grid->add( null, "&#x1F511;" );
 		$grid->add( null, $rollen );
 
-		$grid->add( null, "&#x1F4DE;" );
+		$grid->add( null, $nutzer->getEmailAsHtmlString( true ) );
+		$grid->add( null, "<input type='text' value='" . $nutzer->getEmail() . "' disabled/>" );
+
+		$grid->add( null, $nutzer->getTelefonnummerAsHtmlString( true ) );
 		$grid->add( null, "<input type='text' value='$telefon' name='telefon' $onInput/>" );
 		
 		$grid->add( null, "&#x1F3E0;" );

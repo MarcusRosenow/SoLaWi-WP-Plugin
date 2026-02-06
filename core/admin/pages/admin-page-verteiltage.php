@@ -141,17 +141,19 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 		$grid->add( null, "Ende" );
 		$grid->add( null, "" );
 
-		$grid->add( null, "Ernte&nbsp;(Gemüse)" );
+		$grid->add( null, "Ernten&nbsp;" . SOLAWI_Bereich::GEMUESE->getShortName() );
 		$grid->add( null, "<input type='time' id='startErnte' name='startErnte' value='{$tag->getStartGemueseErnten()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endeErnte' name='endeErnte' value='{$tag->getEndeGemueseErnten()}' $onInput>" );
-		$grid->add( null, $this->getAnzahlHelfer( $tag, true ) . "&nbsp;Helfer&nbsp;angemeldet" );
+		$anzahlHelfer = $this->getAnzahlHelfer( $tag, true );
+		$grid->add( null, $anzahlHelfer == 0 ? "" : "&nbsp;$anzahlHelfer&nbsp;Helfer&nbsp;angemeldet" );
 
-		$grid->add( null, "Packen&nbsp;(Gemüse)" );
+		$grid->add( null, "Packen&nbsp;" . SOLAWI_Bereich::GEMUESE->getShortName() );
 		$grid->add( null, "<input type='time' id='startPacken' name='startPacken' value='{$tag->getStartKistenPacken()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endePacken' name='endePacken' value='{$tag->getEndeKistenPacken()}' $onInput>" );
-		$grid->add( null, $this->getAnzahlHelfer( $tag, false ) . "&nbsp;Helfer&nbsp;angemeldet" );
+		$anzahlHelfer = $this->getAnzahlHelfer( $tag, false );
+		$grid->add( null, $anzahlHelfer == 0 ? "" : "&nbsp;$anzahlHelfer&nbsp;Helfer&nbsp;angemeldet" );
 
-		$grid->add( null, "Verteilung" );
+		$grid->add( null, "Verteilen" );
 		$grid->add( null, "<input type='time' id='startVerteilung' name='startVerteilung' value='{$tag->getStartVerteilung()}' $onInput>" );
 		$grid->add( null, "<input type='time' id='endeVerteilung' name='endeVerteilung' value='{$tag->getEndeVerteilung()}' $onInput>" );
 		$grid->add( null, "" );

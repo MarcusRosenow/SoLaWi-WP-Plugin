@@ -156,8 +156,10 @@ final class SOLAWI_Mitbauer {
 		return get_userdata( $this->getId() )->get( 'user_email' );
 	}
 	
-	public function getEmailAsHtmlString() : string {
+	public function getEmailAsHtmlString( bool $icon = false ) : string {
 		$mail = $this->getEmail();
+		if ( $icon )
+			return "<a href='mailto:$mail' style='text-decoration:none'>&#x1F4E7;</a>";
 		return "<a href='mailto:$mail'>$mail</a>";
 	}
 	
@@ -309,9 +311,13 @@ final class SOLAWI_Mitbauer {
 		$this->setMeta( self::META_KEY_TELEFON, $telefonnummer );
 	}
 
-	public function getTelefonnummerAsHtmlString() : string {
+	public function getTelefonnummerAsHtmlString( bool $icon = false ) : string {
 		$tel = $this->getTelefonnummer();
-		return $tel != null ? "<a href='tel:$tel'>$tel</a>" : "";
+		if ( $tel == null )
+			return "";
+		if ( $icon )
+			return "<a href='tel:$tel' style='text-decoration:none'>&#x1F4DE;</a>";
+		return "<a href='tel:$tel'>$tel</a>";
 	}
 
 	public function getStrasse() : string|null {

@@ -64,7 +64,7 @@ abstract class SOLAWI_AbstractAdminPage {
 	 * Baut das HTML für den Filter
 	 */
 	protected function getFilterHtml() : string {
-		return "<p>Filter: <input type='text' id='jsfilter' oninput='filterDiv(\"jsfilter\")'/>";
+		return "<p>Filter: <input type='text' id='jsfilter' oninput='filterDiv(\"jsfilter\")'/></p>";
 	}
 
 	/**

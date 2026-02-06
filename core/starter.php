@@ -41,6 +41,7 @@ final class SOLAWI_Starter {
 		require_once SOLAWI_PLUGIN_DIR . 'core/admin/print/admin-print-bieterverfahren.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/admin/print/admin-print-verteiltag.php';
 		require_once SOLAWI_PLUGIN_DIR . 'core/admin/print/admin-print-ernteanteile.php';
+		require_once SOLAWI_PLUGIN_DIR . 'core/admin/print/admin-print-nutzer.php';
 
 		new SOLAWI_AdminInitializer();
 		add_action( 'admin_post_print_solawi', array( $this, 'adminPrint' ) );

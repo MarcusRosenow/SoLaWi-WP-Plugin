@@ -12,9 +12,9 @@ enum SOLAWI_Bereich {
 	
 	public function getName() : string {
 		return match($this) {
-			SOLAWI_Bereich::FLEISCH => '<span class="solawi_bereich">&#128002;Fleisch&#128002;</span>',
-			SOLAWI_Bereich::MOPRO => '<span class="solawi_bereich">&#129371;MoPro&#129371;</span>',
-			SOLAWI_Bereich::GEMUESE => '<span class="solawi_bereich">&#129365;Gem&uuml;se&#129365;</span>',
+			SOLAWI_Bereich::FLEISCH => '<span class="solawi_bereich">&#128002;Fleisch</span>',
+			SOLAWI_Bereich::MOPRO => '<span class="solawi_bereich">&#129371;MoPro</span>',
+			SOLAWI_Bereich::GEMUESE => '<span class="solawi_bereich">&#129365;Gem&uuml;se</span>',
             default => die(),
 		};
 	}

@@ -10,7 +10,7 @@ abstract class SOLAWI_AbstractAdminPrint {
      * Gibt die URL zurück, die zu dieser Seite führt.
      * @param zusaetzlicheAttribute ein assoziatives array mit zusätzlichen Keys und Values
      */
-    public final function getUrl( array|null $zusaetzlicheAttribute ) : string {
+    public final function getUrl( array|null $zusaetzlicheAttribute = null ) : string {
 		$url = 'admin-post.php?action=print_solawi';
 		$url .= '&wpnonce=' . wp_create_nonce();
 		$url .= '&clazz=' . get_class( $this );
