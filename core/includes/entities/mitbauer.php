@@ -159,7 +159,7 @@ final class SOLAWI_Mitbauer {
 	public function getEmailAsHtmlString( bool $icon = false ) : string {
 		$mail = $this->getEmail();
 		if ( $icon )
-			return "<a href='mailto:$mail' style='text-decoration:none'>&#x1F4E7;</a>";
+			return "<a href='mailto:$mail'>&#x1F4E7;</a>";
 		return "<a href='mailto:$mail'>$mail</a>";
 	}
 	
@@ -316,7 +316,7 @@ final class SOLAWI_Mitbauer {
 		if ( $tel == null )
 			return "";
 		if ( $icon )
-			return "<a href='tel:$tel' style='text-decoration:none'>&#x1F4DE;</a>";
+			return "<a href='tel:$tel'>&#x1F4DE;</a>";
 		return "<a href='tel:$tel'>$tel</a>";
 	}
 

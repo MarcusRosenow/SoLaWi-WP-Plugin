@@ -104,13 +104,12 @@ table.solawi td.left {
 }
 
 /* Ein Grid aus divs */
-div.solawi_grid_simple {
-	display:grid;
-}
-
-div.solawi_grid_border {
-	display:grid;
-}
+div.solawi_grid_simple { display:grid; }
+div.solawi_grid_border { display:grid; }
+div.solawi_grid_simple a { text-decoration:none; }
+div.solawi_grid_border a { text-decoration:none; }
+div.solawi_grid_simple a:hover { text-decoration:underline; }
+div.solawi_grid_border a:hover { text-decoration:underline; }
 
 div.solawi_grid_border > div {
 	border:1px solid black;
