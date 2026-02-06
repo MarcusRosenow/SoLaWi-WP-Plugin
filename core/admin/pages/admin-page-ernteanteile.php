@@ -14,6 +14,14 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	}
 	
 	public function savePostdata( int $id, array $postData ) : SOLAWI_SavePostdataResult {
+		if ( $id == 99999 && isset( $postData[ "import" ] ) && isset( $postData[ "start" ] ) ) {
+			// importieren von Ernteanteilen
+			if ( $postData[ "start" ] == "" )
+				return new SOLAWI_SavePostdataResult( null, "Startdatum fehlt!", false );
+			$result = $this->import( new DateTime( $postData[ "start" ] ), $postData[ "import" ] );
+			return new SOLAWI_SavePostdataResult( $result == null ? "Erfolgreich importiert!" : null, $result, $result == null );
+		}
+
 		if ( !SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) )
 			return new SOLAWI_SavePostdataResult( null, "Nicht authorisiert! Nicht gespeichert!" );
 		$mitbauer = SOLAWI_Mitbauer::valueOf( $id );
@@ -45,6 +53,70 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		$station = SOLAWI_Verteilstation::valueOf( intval( $postData[ "verteilstation" ] ) );
 		$mitbauer->setVerteilstation( $station );
 		return new SOLAWI_SavePostdataResult( "Erfolgreich gespeichert!", null, isset( $neu ) );
+	}
+
+	/**
+	 * Importiert die Ernteanteile als csv
+	 */
+	private function import( DateTime $start, string $import ) : string|null {
+		$result = "";
+		$i = 0;
+		foreach ( explode( "\n", $import ) as $zeile ) {
+			$i++;
+			$zellen = explode( ';', $zeile );
+			if ( count( $zellen ) != 7) {
+				$result .= "Zeile $i: 6 Semikolons erwartet, aber nicht gefunden<br>";
+				continue;
+			}
+			$matches = null;
+    		preg_match_all('/[,\" \t\'€]/i', $zeile, $matches);
+			if ( count($matches[0]) > 0 ) {
+				$result .= "Zeile $i: [, \"'€] sind verboten!<br>";
+				continue;
+			}
+			if ( !SOLAWI_isGueltigerAnteil( $zellen[1] ) || !SOLAWI_isGueltigerAnteil( $zellen[3] ) || !SOLAWI_isGueltigerAnteil( $zellen[5] )
+				|| !SOLAWI_isGueltigerPreis( $zellen[2] ) || !SOLAWI_isGueltigerPreis( $zellen[4] ) || !SOLAWI_isGueltigerPreis( $zellen[6] ) ) {
+				$result .= "Zeile $i: Ernteanteile syntaktisch falsch<br>";
+				continue;
+			}
+			$email = $zellen[0];
+			$anzahlFleisch = floatval( $zellen[1] );
+			$preisFleisch = floatval( $zellen[2] );
+			$anzahlMoPro = floatval( $zellen[3] );
+			$preisMoPro = floatval( $zellen[4] );
+			$anzahlGemuese = floatval( $zellen[5] );
+			$preisGemuese = floatval( $zellen[6] );
+
+			$mitbauer = SOLAWI_Mitbauer::valueOfEmail( $email );
+			if ( $mitbauer == null ) {
+				$result .= "Zeile $i: Kein Mitbauer zu E-Mail $email gefunden<br>";
+				continue;
+			}
+			if ( $anzahlFleisch == 0 && $preisFleisch != 0 || $anzahlFleisch != 0 && $preisFleisch == 0
+					|| $anzahlMoPro == 0 && $preisMoPro != 0 || $anzahlMoPro != 0 && $preisMoPro == 0
+					|| $anzahlGemuese == 0 && $preisGemuese != 0 || $anzahlGemuese != 0 && $preisGemuese == 0 ) {
+				$result .= "Zeile $i: Ernteanteile unplausibel<br>";
+				continue;
+			}
+			
+			$ernteanteil = $mitbauer->getErnteanteilIntern( $start, true );
+			$neuerAnteil = $ernteanteil == null;
+			if ( $neuerAnteil )
+				$ernteanteil = new SOLAWI_MitbauerErnteanteil( $start );
+			$ernteanteil->setAnzahl( SOLAWI_Bereich::FLEISCH, $anzahlFleisch );
+			$ernteanteil->setPreis( SOLAWI_Bereich::FLEISCH, $preisFleisch );
+			$ernteanteil->setAnzahl( SOLAWI_Bereich::MOPRO, $anzahlMoPro );
+			$ernteanteil->setPreis( SOLAWI_Bereich::MOPRO, $preisMoPro );
+			$ernteanteil->setAnzahl( SOLAWI_Bereich::GEMUESE, $anzahlGemuese );
+			$ernteanteil->setPreis( SOLAWI_Bereich::GEMUESE, $preisGemuese );
+			if ( $neuerAnteil )
+				$mitbauer->addErnteanteil( $ernteanteil );
+			else
+				$mitbauer->updateErnteanteil( $ernteanteil );
+		}
+		if ( $result == "" )
+			return null;
+		return $result;
 	}
 
 	/**
@@ -91,6 +163,16 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 			$this->addKachel( $mitbauer->getName() . " " . $mitbauer->getEmail(), $this->baueMitbauerBlock( $mitbauer ) );
 	}
 	
+	protected function getEndeHtml() : string {
+		if ( SOLAWI_hasRolle( SOLAWI_Rolle::ADMINISTRATOR ) ) {
+			$result = "Daten importieren:<br>(Email;Anz.Fleisch;Preis Fleisch;Anz. MoPro;Preis MoPro;Anz. Gemüse;Preis Gemüse)";
+			$result .= "<form method='POST'>Gültig ab: <input type='date' name='start'/><br>";
+			$result .= "Daten: <textarea name='import'></textarea><br>" . $this->getSubmitButtonHtml( 99999, true, "Importieren", false ) . "</form>";
+			return $result;
+		}
+		return "";
+	}
+
 	/**
 	 * Gibt den Block für die Zusammenfassung aus
 	 */

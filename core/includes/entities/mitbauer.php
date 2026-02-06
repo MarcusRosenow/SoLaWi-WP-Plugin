@@ -66,6 +66,18 @@ final class SOLAWI_Mitbauer {
 	}
 
 	/**
+	 * Gibt den Mitbauern zur übergebenen E-Mail zurück.
+	 * Oder null, falls der Mitbauer nicht gefunden wurde.
+	 */
+	public static function valueOfEmail( string $email ) : SOLAWI_Mitbauer|null {
+		foreach ( self::values() as $mitbauer ) {
+			if ( $mitbauer->getEmail() == $email )
+				return $mitbauer;
+		}
+		return null;
+	}
+
+	/**
 	 * Gibt ein kurzes HTML-Fragment zurück, welches die Anteile der übergebenen Mitbauern für den übergebenen Bereich summiert.
 	 * Das Sieht dann ungefähr so aus:
 	 * "3x ganz<br>2x halb"

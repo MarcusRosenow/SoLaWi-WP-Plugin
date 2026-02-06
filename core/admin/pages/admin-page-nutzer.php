@@ -89,7 +89,7 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 		$grid->add( null, $nutzer->getEmailAsHtmlString( true ) );
 		$grid->add( null, "<input type='text' value='" . $nutzer->getEmail() . "' disabled/>" );
 
-		$grid->add( null, $nutzer->getTelefonnummerAsHtmlString( true ) );
+		$grid->add( null, $nutzer->getTelefonnummer() == null ? "&#x1F4DE;" : $nutzer->getTelefonnummerAsHtmlString( true ) );
 		$grid->add( null, "<input type='text' value='$telefon' name='telefon' $onInput/>" );
 		
 		$grid->add( null, "&#x1F3E0;" );

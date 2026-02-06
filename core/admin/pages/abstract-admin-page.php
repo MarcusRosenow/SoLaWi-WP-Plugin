@@ -76,7 +76,7 @@ abstract class SOLAWI_AbstractAdminPage {
 	/**
 	 * Gibt den String für den Submit/Reset-Button zurück.
 	 */
-	final protected function getSubmitButtonHtml( int $id, bool $visible = false, string|null $submitButtonText = null, bool $mitResetButton = true ) : String {
+	final protected function getSubmitButtonHtml( int $id, bool $visible = false, string|null $submitButtonText = null, bool $mitResetButton = true ) : string {
 		$result = "<input type='hidden' name='clazz' value='" . get_class( $this ) . "'/>";
 		$result .= "<input type='hidden' name='id' value='$id'/>";
 		$hidden = $visible ? "" : " hidden='true'";
