@@ -7,7 +7,7 @@ if ( ! defined( 'ABSPATH' ) )
 final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
 
     public function getHtmlBody() : string {
-        if ( !SOLAWI_hasRolle( SOLAWI_Rolle::BAUER) ) {
+        if ( !SOLAWI_hasRolle( SOLAWI_Rolle::BAUER, SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) ) {
             wp_die('Nicht authorisiert');
         }
         if ( !isset( $_GET['datum'] ) || !isset( $_GET['bereich'] ) ) {
@@ -22,7 +22,7 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
             wp_die( "Keine Verteilung von " . $bereich->getName() . " am " . SOLAWI_formatDatum( $tag->getDatum() ) . "!" );
         }
 
-        $result = "<h1> Verteilung von " . $bereich->getName() . " am " . SOLAWI_formatDatum( $tag->getDatum() ) . "</h1>\n";
+        $result = "";
         foreach ( $stationen as $station )
             $result .= $this->getHtmlTableFuerStation( $tag, $station, $bereich );
         
@@ -32,8 +32,8 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
     }
 
     private function getHtmlTableFuerStation( SOLAWI_Verteiltag $tag, SOLAWI_Verteilstation|null $station, SOLAWI_Bereich $bereich ) : string {
-        $result = "<div>\n";
-        $result .= "<h2>" . ( $station === null ? "Keine Abholung" : $station->getName() ) . "</h2>";
+        $result = "<div class='nopagebreak'>\n";
+        $result .= "<h2>" . $bereich->getName() . " am " . SOLAWI_formatDatum( $tag->getDatum() ) . ": ". ( $station === null ? "Keine Abholung" : $station->getName() ) . "</h2>";
 
         $result .= "<table border width='100%'><tr><th width='50%'>Name</th><th width='25%'>Anzahl Anteile</th><th width='25%'>Abgeholt</th>";
         $relevanteMitbauern = [];
@@ -83,7 +83,7 @@ final class SOLAWI_AdminPrintVerteiltag extends SOLAWI_AbstractAdminPrint {
             }
         }
         $summeJeAnteil = SOLAWI_Mitbauer::getHtmlSummierteAnteile( $relevanteMitbauern, $tag, $bereich, "<br>", true );
-        $result = "<h2>Zusammenfassung</h2>";
+        $result = "<h2>" . $bereich->getName() . " am " . SOLAWI_formatDatum( $tag->getDatum() ) . ": Zusammenfassung</h2>";
         $result .= SOLAWI_formatAnzahl( $summe ) . " zu verteilende Anteile insgesamt an diesem Tag. Davon:<br>";
         $result .= $summeJeAnteil;
         if ( $bereich === SOLAWI_Bereich::GEMUESE ) {

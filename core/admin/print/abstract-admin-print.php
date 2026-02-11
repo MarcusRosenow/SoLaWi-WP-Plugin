@@ -34,6 +34,7 @@ abstract class SOLAWI_AbstractAdminPrint {
         }
         echo "<html>";
         echo "<head><title>SoLaWi Klein Trebbow</title></head>";
+        echo "<style>div.nopagebreak { break-inside: avoid; }</style>";
         echo "<body>";
         echo $this->getHtmlBody();
         echo "</body>";

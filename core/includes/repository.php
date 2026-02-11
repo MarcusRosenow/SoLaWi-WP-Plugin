@@ -78,7 +78,7 @@ final class SOLAWI_Repository {
 		
 		// Tabelle wp_solawi_verteiltag2mitbauer
 		$columns = [];
-		$columns[ "verteiltag_id" ] = "int(11) NOT NULL";
+		$columns[ "verteiltag_id" ] = "bigint(20) NOT NULL";
 		$columns[ "mitbauer_id" ] = "int(11) NOT NULL";
 		$columns[ "station_id" ] = "int(11)";
 		$columns[ "gemuese_ernten" ] = "bool DEFAULT FALSE NOT NULL";

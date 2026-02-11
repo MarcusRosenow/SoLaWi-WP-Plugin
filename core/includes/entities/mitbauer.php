@@ -274,7 +274,7 @@ final class SOLAWI_Mitbauer {
 	 * @return 0, 0.5, 1 ...
 	 */
 	public function getErnteanteil( SOLAWI_Bereich $bereich, DateTime $zeitpunkt ) : float {
-		$ea = $this->getErnteanteilIntern( $zeitpunkt, false, false );
+		$ea = $this->getErnteanteilIntern( $zeitpunkt );
 		return isset( $ea ) ? $ea->getAnzahl( $bereich ) : 0;
 	}
 

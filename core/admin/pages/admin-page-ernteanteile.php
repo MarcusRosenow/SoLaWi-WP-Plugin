@@ -179,10 +179,18 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	private function baueZusammenfassungBlock( array $mitbauern, DateTime $stichtag ) : string {
 		$verteiltag = SOLAWI_Verteiltag::createFromDatum( $stichtag );
 		$anzahlen = [];
+		$budget = [];
+		$budget[ "gesamt" ] = 0;
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
 			$anzahlen[ $bereich->getDbName() ] = 0;
+			$budget[ $bereich->getDbName() ] = 0;
 			foreach ( $mitbauern as $mitbauer ) {
-				$anzahlen[ $bereich->getDbName() ] += $mitbauer->getErnteanteil( $bereich, $stichtag );
+				$ea = $mitbauer->getErnteanteilIntern( $stichtag );
+				if ( $ea != null ) {
+					$anzahlen[ $bereich->getDbName() ] += $ea->getAnzahl( $bereich );
+					$budget[ $bereich->getDbName() ] += $ea->getPreis( $bereich );
+					$budget[ "gesamt" ] += $ea->getPreis( $bereich );
+				}
 			}
 		}
 		$anzahlAktive = 0;
@@ -192,14 +200,19 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 		$result = "";
 		if ( SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) )
 			$result .= $this->getLinkFuerDrucken( $verteiltag );
-		$result .= "<p>$anzahlAktive aktive Mitbauern</p><p>";
+		$result .= "<p>$anzahlAktive aktive Mitbauern";
+		$result .= "<br>" . SOLAWI_formatWaehrung( $budget[ "gesamt" ], true ) . "/Monat";
+		$result .= "&nbsp;=&nbsp;" . SOLAWI_formatWaehrung( $budget[ "gesamt" ] * 12, true ) . "/Jahr";
+		$result .= "</p>";
 		foreach ( SOLAWI_Bereich::values() as $bereich ) {
-			$result .= "<p>" . $anzahlen[ $bereich->getDbName() ] . "x " . $bereich->getName();
+			$result .= "<p>" . $anzahlen[ $bereich->getDbName() ] . "x&nbsp;" . $bereich->getName();
 			$summiert = SOLAWI_Mitbauer::getHtmlSummierteAnteile( $mitbauern, $verteiltag, $bereich, ", " );
 			if ( $summiert != '' )
-				$result .= "&nbsp;($summiert)</p>";
+				$result .= "&nbsp;($summiert)";
+			$result .= "<br>" . SOLAWI_formatWaehrung( $budget[ $bereich->getDbName() ], true ) . "/Monat";
+			$result .= "&nbsp;=&nbsp;" . SOLAWI_formatWaehrung( $budget[ $bereich->getDbName() ] * 12, true ) . "/Jahr";
+			$result .= "</p>";
 		}
-		$result .= "</p>";
 		return $result;
 	}
 
