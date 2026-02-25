@@ -60,7 +60,7 @@ class SOLAWI_KalenderIntegration {
 			'timezone'     => 'Europe/Berlin',
 			'start_date'   => SOLAWI_formatDatum( $tag->getDatum(), true ) . $tag->getStartVerteilung() . ":00",
 			'end_date'     => SOLAWI_formatDatum( $tag->getDatum(), true ) . $tag->getEndeVerteilung() . ":00",
-			'category'     => [ $this->term->id ]
+			'category'     => [ $this->term->term_id ]
 		];
 
 		$vorhandenerPost = tribe_events()->where( 'name', $post_name )->per_page( -1 );
