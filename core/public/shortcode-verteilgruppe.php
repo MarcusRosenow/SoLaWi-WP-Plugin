@@ -24,13 +24,13 @@ final class SOLAWI_ShortcodeVerteilgruppe extends SOLAWI_AbstractShortcode {
             return "";
 
         if ( $meineStation->isHof() ) {
-            $result = "Deine Verteilstation ist {$meineStation->getName()}.";
+            $result = "Deine Standard-Verteilstation ist {$meineStation->getName()}.";
             if ( SOLAWI_Verteiltag2Mitbauer::valueOf( $verteiltag, $mitbauer )->getVerteilstation() === null )
                 $result .= "<br>Am " . SOLAWI_formatDatum( $verteiltag->getDatum() ) . " möchtest du deine Kiste(n) aber nicht abholen.";
             return "<p class='has-text-align-center'>$result</p>";
         }
         $mitbauern = SOLAWI_Mitbauer::values( $meineStation );
-        $result = "<p class='has-text-align-center'>Deine Verteilstation ({$meineStation->getName()}) am " . SOLAWI_formatDatum( $verteiltag->getDatum() ) . ":</p>";
+        $result = "<p class='has-text-align-center'>Deine Standard-Verteilstation ({$meineStation->getName()}) am " . SOLAWI_formatDatum( $verteiltag->getDatum() ) . ":</p>";
         $result .= "<table class='solawi'><tr class='stark'><td class='left'>Mitbauer</td><td class='right'>";
         $result .= SOLAWI_arrayToString( $verteiltag->getVerteilungen(), "getName", "</td><td class='right'>" );
         $result .= "</td></tr>";

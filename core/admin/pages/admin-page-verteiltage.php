@@ -49,8 +49,8 @@ final class SOLAWI_AdminPageVerteiltage extends SOLAWI_AbstractAdminPage {
 
 		SOLAWI_Repository::instance()->save( $tag );
 		$erg = SOLAWI_KalenderIntegration::instance()->updateKalender( $tag );
-		if ( !$erg[ "success" ])
-			new SOLAWI_SavePostdataResult( null, "Eintrag gespeichert, Kalender konnte aber nicht aktualisiert werden: " . $erg["error"] );
+		if ( $erg != null )
+			new SOLAWI_SavePostdataResult( null, "Eintrag gespeichert, Kalender konnte aber nicht aktualisiert werden: " . $erg );
 		return new SOLAWI_SavePostdataResult( "Erfolgreich gespeichert!", null, isset( $postData[ "datum"] ) );
 	}
 	
