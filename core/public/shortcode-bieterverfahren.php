@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) )
 	exit;
 
 /**
- * Frontend-Ausgabe für das Bieterverfahren
+ * Frontend-Ausgabe für das Beitragsverfahren
  */
 final class SOLAWI_ShortcodeBieterverfahren extends SOLAWI_AbstractShortcode {
 

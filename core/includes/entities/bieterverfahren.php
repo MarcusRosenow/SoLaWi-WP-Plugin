@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) )
 	exit;
 
 /**
- * Ein Bieterverfahren besteht aus mehreren Runden
+ * Ein Beitragsverfahren besteht aus mehreren Runden
  */
 final class SOLAWI_Bieterverfahren {
 	
@@ -57,7 +57,7 @@ final class SOLAWI_Bieterverfahren {
     }
 
 	/**
-	 * Gibt alle Bieterverfahren zurück
+	 * Gibt alle Beitragsverfahren zurück
 	 */
 	public static function values() : array {
 		if ( !isset( self::$values ) ) {
@@ -82,14 +82,14 @@ final class SOLAWI_Bieterverfahren {
 	}
 
 	/**
-	 * Gibt zurück, ob gerade ein Bieterverfahren läuft
+	 * Gibt zurück, ob gerade ein Beitragsverfahren läuft
 	 */
 	public static function isBieterverfahrenAktiv() : bool {
 		return self::getAktuellesVerfahren() !== null;
 	}
 
 	/**
-	 * Gibt das aktuell laufende Bieterverfahren zurück ... oder null
+	 * Gibt das aktuell laufende Beitragsverfahren zurück ... oder null
 	 */
 	public static function getAktuellesVerfahren() : SOLAWI_Bieterverfahren|null {
 		foreach( self::values() as $verfahren )
@@ -161,7 +161,7 @@ final class SOLAWI_Bieterverfahren {
 	}
 
 	/**
-	 * Gibt die Anzahl der Runden zurück, die dieses Bieterverfahren laufen soll.
+	 * Gibt die Anzahl der Runden zurück, die dieses Beitragsverfahren laufen soll.
 	 * 
 	 * @return >= 0
 	 */

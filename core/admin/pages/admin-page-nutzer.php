@@ -38,7 +38,7 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 	protected function getFilterHtml() : string {
 		$result = parent::getFilterHtml();
 		$url = ( new SOLAWI_AdminPrintNutzer() )->getUrl();
-		$result.= "<p><a href='$url' target='_blank'>Daten exportieren</a>";
+		$result.= "<p><a href='$url' target='_blank'>Mitbauer-Daten exportieren</a>";
 		return $result;
 	}
 	
@@ -54,8 +54,12 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 
 	protected function getEndeHtml() : string {
 		$result = "<h2>Legende</h2>";
-		foreach( SOLAWI_Rolle::values() as $rolle )
-			$result .= "<p><b>" . $rolle->getName() . "</b>: " . $rolle->getBeschreibung() . "</p>";
+		foreach( SOLAWI_Rolle::values() as $rolle ) {
+			$result .= "<p><b>" . $rolle->getName() . "</b>: " . $rolle->getBeschreibung();
+			if ( $rolle === SOLAWI_Rolle::MITBAUER )
+				$result .= "<br>Die Rolle Mitbauer kann nur entfernt werden, wenn der Mitbauer aktuell keine Ernteanteile besitzt!";
+			$result .= "</p>";
+		}
 		return $result;
 	}
 	
@@ -77,10 +81,20 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 		$onInput = $this->getOnInputEventHtml( $userId );
 		$rollen = "";
 		foreach( SOLAWI_Rolle::values() as $rolle ) {
-			$checked =  $nutzer->hasRolle( $rolle ) ? " checked" : "";
+			$hatRolle = $nutzer->hasRolle( $rolle );
+			$checked = $hatRolle ? " checked" : "";
 			$disabled = $userId == get_current_user_id() ? " disabled" : "";
 			$rolleId = $rolle->getId();
 			$rolleName = $rolle->getName();
+			if ( $rolle == SOLAWI_Rolle::MITBAUER ) {
+				$hatErnteanteile = $nutzer->hasErnteanteile();
+				if ( $hatRolle && !$hatErnteanteile )
+					$rolleName .= " <b>(Aktuell ohne Ernteanteile)</b>";
+				if ( !$hatRolle && $hatErnteanteile )
+					$rolleName .= " <b>(Fehler: Aktuell mit Ernteanteilen)</b>";
+				if ( $hatErnteanteile )
+					$disabled = " disabled";
+			}
 			$rollen .= "<input type='checkbox'$checked name='rolle$rolleId' $onInput$disabled/>$rolleName<br>";
 		}
 		$grid->add( null, "&#x1F511;" );

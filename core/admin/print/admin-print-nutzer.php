@@ -15,8 +15,9 @@ final class SOLAWI_AdminPrintNutzer extends SOLAWI_AbstractAdminPrint {
         $result .= "<p>Gedruckt am " . SOLAWI_formatDatum( new DateTime() ) . "</p>";
 
         $result .= "<table border width='100%'><tr><th>Name</th><th>E-Mail</th><th>Telefon</th><th>Straße</th><th>Ort</th><th>Bemerkung</th></tr>";
-        $mitbauern = SOLAWI_Mitbauer::values();
-        foreach ( $mitbauern as $mitbauer ) {
+        foreach ( SOLAWI_Mitbauer::values() as $mitbauer ) {
+            if ( !$mitbauer->hasRolle( SOLAWI_Rolle::MITBAUER ) )
+                continue;
             $result .= "<tr>";
             $result .= "<td>" . $mitbauer->getName() . "</td>";
             $result .= "<td>" . $mitbauer->getEmail() . "</td>";

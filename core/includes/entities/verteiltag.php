@@ -61,15 +61,19 @@ final class SOLAWI_Verteiltag {
 	 * 
 	 * @param anzahlTage optional, es werden nur so viele Verteiltage zurückgegeben, wie hier angegeben
 	 */
-	public static function values( int|null $anzahlTage = null ) : array {
+	public static function values( int|null $anzahlTage = null, bool $nurZukuenftige = true ) : array {
 		if ( !isset( self::$values ) ) {
 			self::$values = SOLAWI_Repository::instance()->getVerteiltage();
 		}
-		if ( isset( $anzahlTage ) ) {
-			$retVal = array_filter( self::$values, function( SOLAWI_Verteiltag $v ) { return $v->hasVerteilungen(); } );
-			return array_slice( $retVal, 0, $anzahlTage );
+		$retVal = self::$values;
+		if ( $nurZukuenftige ) {
+			$retVal = array_filter( self::$values, function( SOLAWI_Verteiltag $v ) { return !$v->isVergangen(); } );
 		}
-		return self::$values;
+		if ( isset( $anzahlTage ) ) {
+			$retVal = array_filter( $retVal, function( SOLAWI_Verteiltag $v ) { return $v->hasVerteilungen(); } );
+			$retVal = array_slice( $retVal, 0, $anzahlTage );
+		}
+		return $retVal;
 	}
 	
 	/**
@@ -84,7 +88,7 @@ final class SOLAWI_Verteiltag {
 	 * Gibt null zurück, wenn der Verteiltag nicht gefunden wird.
 	 */
 	public static function valueOf( int $id ) : SOLAWI_Verteiltag|null {
-		return SOLAWI_findEntityById( self::values(), $id );
+		return SOLAWI_findEntityById( self::values( null, false ), $id );
 	}
 
 	/**
@@ -116,6 +120,12 @@ final class SOLAWI_Verteiltag {
 	public static function createFromId( int $id ) : SOLAWI_Verteiltag {
 		return new SOLAWI_Verteiltag( $id, DateTime::createFromFormat( "Ymd", $id ) );
 	}
+
+	private static function heute() : DateTime {
+		$datum = new DateTime();
+		$datum->setTime( 0, 0, 0 );
+		return $datum;
+	}
 	
 	/**
 	 * Gibt die ID zurück
@@ -129,6 +139,13 @@ final class SOLAWI_Verteiltag {
 	 */
 	public function getDatum() : DateTime {
 		return $this->datum;
+	}
+
+	/**
+	 * Gibt zurück, ob dieser Verteiltag bereits vergangen ist.
+	 */
+	public function isVergangen() : bool {
+		return $this->getDatum() < self::heute();
 	}
 
 	/**

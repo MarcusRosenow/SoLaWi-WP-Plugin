@@ -17,7 +17,7 @@ final class SOLAWI_AdminPrintBieterverfahren extends SOLAWI_AbstractAdminPrint {
         $verfahren = SOLAWI_Bieterverfahren::valueOf( intval( $_GET['verfahren'] ) );
         $runde = intval( $_GET['runde'] );
 
-        $result = "<h1>Gebote aus dem Bieterverfahren</h1>";
+        $result = "<h1>Gebote aus dem Beitragsverfahren</h1>";
         $result .= "Geöffnet von ";
         $result .= SOLAWI_formatDatum( $verfahren->getGueltigAb() ) . " bis ";
         $result .= $verfahren->getGueltigBis() == null ? "offen" : SOLAWI_formatDatum( $verfahren->getGueltigBis() );

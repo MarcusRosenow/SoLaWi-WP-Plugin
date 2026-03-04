@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) )
 	exit;
 
 /**
- * Frontend-Ausgabe für das Bieterverfahren
+ * Frontend-Ausgabe für das Beitragsverfahren
  */
 final class SOLAWI_WidgetErfassunggebote extends SOLAWI_AbstractWidget {
 
@@ -37,7 +37,7 @@ final class SOLAWI_WidgetErfassunggebote extends SOLAWI_AbstractWidget {
 
 	/**
 	 * Gibt das SOLAWI_BieterverfahrenGebot aus den POST-Daten zurück, oder eine Fehlermeldung als string.
-	 * Die Konvertierung klappt nur, wenn es ein offenes Bieterverfahren gibt und die Runde noch offen ist.
+	 * Die Konvertierung klappt nur, wenn es ein offenes Beitragsverfahren gibt und die Runde noch offen ist.
 	 */
 	public static function konvertierePostdataZuGebot( array $data ) : SOLAWI_BieterverfahrenGebot|string {
 		if ( !self::isPostdataVonDiesemWidget( $data ) ) {
@@ -79,7 +79,7 @@ final class SOLAWI_WidgetErfassunggebote extends SOLAWI_AbstractWidget {
     public function getHtml() : string {
         $verfahren = SOLAWI_Bieterverfahren::getAktuellesVerfahren();
         if ( $verfahren === null )
-            return "Zurzeit läuft kein Bieterverfahren!";
+            return "Zurzeit läuft kein Beitragsverfahren!";
         $registerkarten = new SOLAWI_WidgetRegisterkarten( "verfahren" . $verfahren->getId() );
         for( $i=1; $i <= $verfahren->getAnzahlRunden(); $i++ )
             $registerkarten->add( "v" . $verfahren->getId() . "r" . $i, "Runde $i", $this->getHtmlFuerRunde( $verfahren, $i ), $i == $verfahren->getAktuelleRunde() );

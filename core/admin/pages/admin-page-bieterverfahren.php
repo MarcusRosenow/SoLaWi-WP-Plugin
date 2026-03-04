@@ -5,7 +5,7 @@ if ( ! defined( 'ABSPATH' ) )
 	exit;
 
 /**
- * Für die Initialisierung des Backends für das Bieterverfahren
+ * Für die Initialisierung des Backends für das Beitragsverfahren
  */
 final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 
@@ -20,7 +20,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 	const ACTION_GEBOTE_UEBERTRAGEN = "geboteUebertragen";
 
 	public function getTitel() : string {
-		return "Bieterverfahren";
+		return "Beitragsverfahren";
 	}
 
 	public function getAnzahlSpalten() : int {
@@ -29,7 +29,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 	
 	public function savePostdata( int $id, array $postData ) : SOLAWI_SavePostdataResult {
 		if ( SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) )
-		// Neues Bieterverfahren
+		// Neues Beitragsverfahren
 		if ( $id == self::NEUES_BIETERVERFAHREN_ID ) {
 			if ( SOLAWI_Bieterverfahren::isBieterverfahrenAktiv() )
 				return new SOLAWI_SavePostdataResult( null, "Ein neues Verfahren kann nur gestartet werden, wenn alle Verfahren beendet sind." );
@@ -63,14 +63,14 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
         	}
 
 		} else {
-			// Bestehendes Bieterverfahren
+			// Bestehendes Beitragsverfahren
 			$verfahren = SOLAWI_Bieterverfahren::valueOf( $id );
 			if ( !isset( $postData[ "aktion" ] ) )
 				return new SOLAWI_SavePostdataResult( null, "Keine Aktion angegeben." );
 
 			if ( $postData[ "aktion" ] == self::ACTION_RUNDE_SCHLIESSEN ) {
 				if ( $verfahren->getGueltigBis() !== null )
-					return new SOLAWI_SavePostdataResult( null, "Kein aktives Bieterverfahren mit der übergebenen ID." );
+					return new SOLAWI_SavePostdataResult( null, "Kein aktives Beitragsverfahren mit der übergebenen ID." );
 				if ( $verfahren->getAktuelleRunde() == 0 )
 					return new SOLAWI_SavePostdataResult( null, "Runde bereits geschlossen.", true );
 				$verfahren->setLetzteRunde( $verfahren->getAktuelleRunde() );
@@ -83,7 +83,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 
 			} elseif ( $postData[ "aktion" ] == self::ACTION_VERFAHREN_SCHLIESSEN ) {
 				if ( $verfahren->getGueltigBis() !== null )
-					return new SOLAWI_SavePostdataResult( null, "Kein aktives Bieterverfahren mit der übergebenen ID." );
+					return new SOLAWI_SavePostdataResult( null, "Kein aktives Beitragsverfahren mit der übergebenen ID." );
 				$verfahren->setLetzteRunde( $verfahren->getAktuelleRunde() );
 				$verfahren->setAktuelleRunde( 0 );
 				$verfahren->setGueltigBis( new DateTime() );
@@ -124,7 +124,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 	}
 
 	/**
-	 * Beim Bieterverfahren gibt es keinen Filter.
+	 * Beim Beitragsverfahren gibt es keinen Filter.
 	 */
 	protected function getFilterHtml() : string {
 		return "";
@@ -138,14 +138,14 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 			return;
 		$verfahren = SOLAWI_Bieterverfahren::values();
 		if ( !SOLAWI_Bieterverfahren::isBieterverfahrenAktiv() )
-			$this->addKachel( "Neues Bieterverfahren", $this->getHtmlNeuesVerfahren(), false );
+			$this->addKachel( "Neues Beitragsverfahren", $this->getHtmlNeuesVerfahren(), false );
 		foreach( $verfahren as $v ) {
 			$this->addKachel( $v->getId(), $this->getHtmlVerfahren( $v ) );
 		}
 	}
 
 	/**
-	 * Baut das HTML für ein neues Bieterverfahren zusammen.
+	 * Baut das HTML für ein neues Beitragsverfahren zusammen.
 	 */
 	private function getHtmlNeuesVerfahren() : string {
 		$vorherigesVerfahren = SOLAWI_Bieterverfahren::values();
@@ -154,7 +154,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 		} else {
 			$vorherigesVerfahren = new SOLAWI_Bieterverfahren();
 		}
-		$result = "<h2>Neues Bieterverfahren starten</h2>";
+		$result = "<h2>Neues Beitragsverfahren starten</h2>";
 		$result .= "<form action='POST'>";
 		$result .= "Durch die Mitbauern zu erreichendes Gesamtbudget: <input name='gesamtBudget' type='number' step='1000' min='1000' max='1000000' value='" . $vorherigesVerfahren->getGesamtbudget() . "'/><br>";
 		$result .= "Maximale Anzahl Runden: <input name='anzahlRunden' type='number' step='1' min='1' max='5' value='" . $vorherigesVerfahren->getAnzahlRunden() . "'/><br>";
@@ -175,17 +175,17 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 		}
 		$result .= $kacheln->getHtml();
 		$result .= "<br><br>";
-		$result .= $this->getSubmitButtonHtml( self::NEUES_BIETERVERFAHREN_ID, true, "Bieterverfahren eröffnen", false );
+		$result .= $this->getSubmitButtonHtml( self::NEUES_BIETERVERFAHREN_ID, true, "Beitragsverfahren eröffnen", false );
 		$result .= "</form>";
 		return $result;
 	}
 
 	/**
-	 * Baut das HTML für ein Bieterverfahren zusammen.
+	 * Baut das HTML für ein Beitragsverfahren zusammen.
 	 */
 	private function getHtmlVerfahren( SOLAWI_Bieterverfahren $verfahren ) : string {
 		$isOffen = $verfahren->getGueltigBis() == null;
-		$result = "<h2>" . ( $isOffen ? "Aktuelles " : "" ) . "Bieterverfahren vom " . SOLAWI_formatDatum( $verfahren->getGueltigAb() ) . ( !$isOffen ? " bis " . SOLAWI_formatDatum( $verfahren->getGueltigBis() ) : "" ) . "</h2>";
+		$result = "<h2>" . ( $isOffen ? "Aktuelles " : "" ) . "Beitragsverfahren vom " . SOLAWI_formatDatum( $verfahren->getGueltigAb() ) . ( !$isOffen ? " bis " . SOLAWI_formatDatum( $verfahren->getGueltigBis() ) : "" ) . "</h2>";
 		$result .= "<b>Gesamtbudget: " . SOLAWI_formatWaehrung( $verfahren->getGesamtbudget(), true ) . "</b><br>";
 		$result .= "Start des Wirtschaftsjahres: " . SOLAWI_formatDatum( $verfahren->getStartDerSaison() ) . "<br><br>";
 
@@ -206,8 +206,8 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 		$result .= "Aktion durchführen:<select name='aktion' $onInput><option>Bitte wählen ...</option>";
 		if ( $isOffen ) {
 			if ( $verfahren->getAktuelleRunde() < $verfahren->getAnzahlRunden() )
-				$result .= "<option value='" . self::ACTION_RUNDE_SCHLIESSEN . "'>Bieterrunde " . $verfahren->getAktuelleRunde() . " schließen</option>";
-			$result .= "<option value='" . self::ACTION_VERFAHREN_SCHLIESSEN . "'>Bieterverfahren abschließen</option>";
+				$result .= "<option value='" . self::ACTION_RUNDE_SCHLIESSEN . "'>Beitragsrunde " . $verfahren->getAktuelleRunde() . " schließen</option>";
+			$result .= "<option value='" . self::ACTION_VERFAHREN_SCHLIESSEN . "'>Beitragsverfahren abschließen</option>";
 		} else if ( $verfahren->getStartDerSaison() >= new DateTime() && SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) ) {
 			$result .= "<option value='" . self::ACTION_GEBOTE_UEBERTRAGEN . "'>Gebote der Runde " . $verfahren->getLetzteRunde() . " auf die Ernteanteile ab " . SOLAWI_formatDatum( $verfahren->getStartDerSaison() ) . " übertragen</option>";
 		}

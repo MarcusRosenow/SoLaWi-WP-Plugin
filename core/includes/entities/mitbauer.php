@@ -282,7 +282,7 @@ final class SOLAWI_Mitbauer {
 	 * Gibt zurück, ob der Mitbauer Ernteanteile hat
 	 * @param $bereiche entweder ein SOLAWI_Bereich, oder ein Array von Bereichen
 	 */
-	public function hasErnteanteile( SOLAWI_Bereich|array $bereiche = null, DateTime $zeitpunkt ) : bool {
+	public function hasErnteanteile( SOLAWI_Bereich|array $bereiche = null, DateTime $zeitpunkt = new DateTime() ) : bool {
 		if ( $bereiche === null )
 			$bereiche = SOLAWI_Bereich::values();
 		else if ( $bereiche instanceof SOLAWI_Bereich )

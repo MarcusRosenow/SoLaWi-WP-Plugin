@@ -40,7 +40,7 @@ final class SOLAWI_BieterverfahrenGebot {
     }
 
 	/**
-	 * Gibt alle Bieterverfahren zurück
+	 * Gibt alle Beitragsverfahren zurück
 	 */
 	public static function values( SOLAWI_Bieterverfahren|null $bieterverfahren = null, int|null $runde = null, SOLAWI_MITBAUER|null $mitbauer = null ) : array {
 		if ( !isset( self::$values ) ) {
@@ -85,7 +85,7 @@ final class SOLAWI_BieterverfahrenGebot {
 	}
 	
 	/**
-	 * Gibt das Bieterverfahren zurück, zu dem dieses Gebot gehört
+	 * Gibt das Beitragsverfahren zurück, zu dem dieses Gebot gehört
 	 */
 	public function getBieterverfahren() : SOLAWI_Bieterverfahren {
 		return $this->bieterverfahren;
