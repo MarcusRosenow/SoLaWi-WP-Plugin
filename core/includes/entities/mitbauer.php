@@ -256,7 +256,7 @@ final class SOLAWI_Mitbauer {
 	 * Wenn $passend true ist, werden nur Ernteanteile gesucht, die genau am übergebenen Zeitpunkt ihre Gültigkeit starten.
 	 * Ansonsten wird geprüft, ob ein Ernteanteil, der ab einem früheren Zeitpunkt galt, immer noch gilt.
 	 * 
-	 * Wird kein passender/letzter Ernteanteil gefunden, wird ein leeres Ernteanteil-Objekt in diesen Mitbauern gespeichert und zurückgegeben.
+	 * Wird kein passender/letzter Ernteanteil gefunden, wird null zurückgegeben.
 	 */
 	public function getErnteanteilIntern( DateTime $zeitpunkt, bool $passend = false ) : SOLAWI_MitbauerErnteanteil|null {
 		$letzterAnteil = null;

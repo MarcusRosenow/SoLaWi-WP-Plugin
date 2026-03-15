@@ -155,9 +155,12 @@ final class SOLAWI_Repository {
 	/**
 	 * Löscht die übergebene Entity
 	 */
-	public function remove( SOLAWI_Verteilstation|SOLAWI_Verteiltag|SOLAWI_Verteiltag2Mitbauer $entity ) : void {
+	public function remove( SOLAWI_Verteilstation|SOLAWI_Verteiltag|SOLAWI_Verteiltag2Mitbauer|SOLAWI_Bieterverfahren $entity ) : void {
 		$table = $this->getTableName( $entity );
 		global $wpdb;
+		if ( $entity instanceof SOLAWI_Bieterverfahren ) {
+			$wpdb->delete( $this->tableBieterverfahrenGebot, array( 'bieterverfahren_id' => $entity->getId() ) );
+		}
 		$wpdb->delete( $table, array( 'id' => $entity->getId() ) );
 		$entity::clearCache();
 	}

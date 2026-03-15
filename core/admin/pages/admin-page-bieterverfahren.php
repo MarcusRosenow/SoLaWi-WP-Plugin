@@ -17,6 +17,8 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 
 	const ACTION_VERFAHREN_SCHLIESSEN = "verfahrenSchliessen";
 
+	const ACTION_VERFAHREN_LOESCHEN = "verfahrenLoeschen";
+
 	const ACTION_GEBOTE_UEBERTRAGEN = "geboteUebertragen";
 
 	public function getTitel() : string {
@@ -90,6 +92,12 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 				SOLAWI_Repository::instance()->save( $verfahren );
 				return new SOLAWI_SavePostdataResult( "Verfahren beendet", null, true );
 
+			} elseif ( $postData[ "aktion" ] == self::ACTION_VERFAHREN_LOESCHEN ) {
+				if ( $verfahren->getGueltigBis() === null )
+					return new SOLAWI_SavePostdataResult( null, "Nur beendete Verfahren können gelöscht werden." );
+				SOLAWI_Repository::instance()->remove( $verfahren );
+				return new SOLAWI_SavePostdataResult( "Verfahren gelöscht", null, true );
+
 			} elseif ( $postData[ "aktion" ] == self::ACTION_GEBOTE_UEBERTRAGEN ) {
 				if ( $verfahren->getGueltigBis() == null )
 					return new SOLAWI_SavePostdataResult( null, "Erst das Verfahren schließen!", true );
@@ -101,24 +109,41 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 					$gebot = $verfahren->getGebot( $runde, $mitbauer );
 					$ernteanteileBisher = $mitbauer->getErnteanteilIntern( $datum, false );
 					$ernteanteileNeu = $mitbauer->getErnteanteilIntern( $datum, true );
-					foreach( SOLAWI_Bereich::values() as $bereich ) {
-						if ( $gebot != null ) {
-							$ernteanteileNeu->setAnzahl( $bereich, $gebot->getAnzahl( $bereich ) );
-							$ernteanteileNeu->setPreis( $bereich, $gebot->getPreis( $bereich ) );
-						} else {
-							$anzahl = $ernteanteileBisher->getAnzahl( $bereich );
-							$alterPreis = $ernteanteileBisher->getPreis( $bereich );
-							$neuerPreis = $anzahl * $verfahren->getDurchschnittsgebot( $runde, $bereich );
-							$ernteanteileNeu->setAnzahl( $bereich, $anzahl );
-							$ernteanteileNeu->setPreis( $bereich, max( $alterPreis, $neuerPreis ) );
-						}
+					if ( $ernteanteileNeu == null ) {
+						$ernteanteileNeu = new SOLAWI_MitbauerErnteanteil( $datum );
+						$this->uebertrageGebotInErnteAnteil( $verfahren, $runde, $gebot, $ernteanteileNeu, $ernteanteileBisher );
+						$mitbauer->addErnteanteil( $ernteanteileNeu );
+					} else {
+						$this->uebertrageGebotInErnteAnteil( $verfahren, $runde, $gebot, $ernteanteileNeu, $ernteanteileBisher );
+						$mitbauer->updateErnteanteil( $ernteanteileNeu );
 					}
-					SOLAWI_Repository::instance()->save( $mitbauer );
 				}
 				return new SOLAWI_SavePostdataResult( "Anteile erfolgreich übertragen!", null, false );
 
 			} else {
 				return new SOLAWI_SavePostdataResult( null, "Aktion " . $postData[ "aktion" ] . " nicht unterstützt");
+			}
+		}
+	}
+
+	/**
+	 * Überträgt das übergebene Gebot in den $ernteanteileNeu
+	 */
+	private function uebertrageGebotInErnteAnteil( SOLAWI_Bieterverfahren $verfahren,
+													int $runde,
+													SOLAWI_BieterverfahrenGebot|null $gebot,
+													SOLAWI_MitbauerErnteanteil $ernteanteileNeu,
+													SOLAWI_MitbauerErnteanteil|null $ernteanteileBisher ) {
+		foreach( SOLAWI_Bereich::values() as $bereich ) {
+			if ( $gebot != null ) {
+				$ernteanteileNeu->setAnzahl( $bereich, $gebot->getAnzahl( $bereich ) );
+				$ernteanteileNeu->setPreis( $bereich, $gebot->getPreis( $bereich ) );
+			} else if ( $ernteanteileBisher !== null ) {
+				$anzahl = $ernteanteileBisher->getAnzahl( $bereich );
+				$alterPreis = $ernteanteileBisher->getPreis( $bereich );
+				$neuerPreis = $anzahl * $verfahren->getDurchschnittsgebot( $runde, $bereich );
+				$ernteanteileNeu->setAnzahl( $bereich, $anzahl );
+				$ernteanteileNeu->setPreis( $bereich, max( $alterPreis, $neuerPreis ) );
 			}
 		}
 	}
@@ -171,7 +196,7 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 		}
 		$kacheln->add( null, "Richtwert pro Ernteanteil:" );
 		foreach( SOLAWI_Bereich::values() as $bereich ) {
-			$kacheln->add( null, "<input name='richtwert" . $bereich->getDbName() . "' type='number' min='1' max='999' value='" . $vorherigesVerfahren->getRichtwert( $bereich ) . "'/>" );
+			$kacheln->add( null, "<input name='richtwert" . $bereich->getDbName() . "' type='number' step='1' min='1' max='999' value='" . $vorherigesVerfahren->getRichtwert( $bereich ) . "'/>" );
 		}
 		$result .= $kacheln->getHtml();
 		$result .= "<br><br>";
@@ -208,8 +233,11 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 			if ( $verfahren->getAktuelleRunde() < $verfahren->getAnzahlRunden() )
 				$result .= "<option value='" . self::ACTION_RUNDE_SCHLIESSEN . "'>Beitragsrunde " . $verfahren->getAktuelleRunde() . " schließen</option>";
 			$result .= "<option value='" . self::ACTION_VERFAHREN_SCHLIESSEN . "'>Beitragsverfahren abschließen</option>";
-		} else if ( $verfahren->getStartDerSaison() >= new DateTime() && SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) ) {
-			$result .= "<option value='" . self::ACTION_GEBOTE_UEBERTRAGEN . "'>Gebote der Runde " . $verfahren->getLetzteRunde() . " auf die Ernteanteile ab " . SOLAWI_formatDatum( $verfahren->getStartDerSaison() ) . " übertragen</option>";
+		} else {
+			$result .= "<option value='" . self::ACTION_VERFAHREN_LOESCHEN . "'>Beitragsverfahren löschen</option>";
+			if ( $verfahren->getStartDerSaison() >= new DateTime() && SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) ) {
+				$result .= "<option value='" . self::ACTION_GEBOTE_UEBERTRAGEN . "'>Gebote der Runde " . $verfahren->getLetzteRunde() . " auf die Ernteanteile ab " . SOLAWI_formatDatum( $verfahren->getStartDerSaison() ) . " übertragen</option>";
+			}
 		}
 		$result .= "</select>";
 		$result .= $this->getSubmitButtonHtml( $verfahren->getId(), false, "Aktion ausführen", false );
@@ -273,7 +301,8 @@ final class SOLAWI_AdminPageBieterverfahren extends SOLAWI_AbstractAdminPage {
 			  <td align='right' colspan='6'><b>".SOLAWI_formatWaehrung($summeGesamt,true)."<br>($differenz)</b></td>
 			  </tr>";
 		$result .= "</table>";
-		$result .= "<b><a href='javascript:location.reload()'>Seite aktualisieren</a></b><br>";
+		if ( $verfahren ->getGueltigBis() == null )
+			$result .= "<b><a href='javascript:location.reload()'>Seite aktualisieren</a></b><br>";
 		if ( SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER ) )
 			$result .= $this->getLinkFuerUebersicht( $verfahren, $runde );
 		return $result;

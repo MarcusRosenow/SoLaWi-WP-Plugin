@@ -75,7 +75,7 @@ final class SOLAWI_AdminPrintBieterverfahren extends SOLAWI_AbstractAdminPrint {
                 $result .= $this->getHtmlZeileOhneGebot( $verfahren, $runde, $mitbauer );
         }
         $result .= "</table></div>";
-        return count( $gebote ) == 0 ? "" : $result;
+        return $result;
     }
 
     private function getHtmlZeileOhneGebot( SOLAWI_Bieterverfahren $verfahren, int $runde, SOLAWI_Mitbauer $mitbauer ) : string {
@@ -86,7 +86,7 @@ final class SOLAWI_AdminPrintBieterverfahren extends SOLAWI_AbstractAdminPrint {
             $preisAlt = $ea->getPreis( $bereich );
             $preisNeu = $anzahl * $verfahren->getDurchschnittsGebot( $runde, $bereich );
             $result .= "<td align=right>" . SOLAWI_formatAnzahl( $anzahl ) . "</td>";
-            $result .= "<td align=right>" . SOLAWI_formatWaehrung( $preisAlt ) . " / " . SOLAWI_formatWaehrung( $preisNeu ) . "</td>";
+            $result .= "<td align=right>" . SOLAWI_formatWaehrung( $preisAlt ) . " / " . SOLAWI_formatWaehrung( max( $preisAlt, $preisNeu ) ) . "</td>";
         }
         $result .= "</tr>";
         return $result;

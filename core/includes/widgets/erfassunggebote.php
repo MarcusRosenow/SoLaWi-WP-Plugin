@@ -185,9 +185,11 @@ final class SOLAWI_WidgetErfassunggebote extends SOLAWI_AbstractWidget {
         // Wenn es keine Gebote gibt, die aktuellen Ernteanteile und Preise ermitteln
         $ernteanteil = $this->mitbauer->getErnteanteilIntern( $verfahren->getStartDerSaison() );
         $gebot = new SOLAWI_BieterverfahrenGebot();
-        foreach( SOLAWI_Bereich::values() as $bereich ) {
-            $gebot->setAnzahl( $bereich, $ernteanteil->getAnzahl( $bereich ) );
-            $gebot->setPreis( $bereich, $ernteanteil->getPreis( $bereich ) );
+        if ( $ernteanteil != null ) {
+            foreach( SOLAWI_Bereich::values() as $bereich ) {
+                $gebot->setAnzahl( $bereich, $ernteanteil->getAnzahl( $bereich ) );
+                $gebot->setPreis( $bereich, $ernteanteil->getPreis( $bereich ) );
+            }
         }
         return $gebot;
     }
