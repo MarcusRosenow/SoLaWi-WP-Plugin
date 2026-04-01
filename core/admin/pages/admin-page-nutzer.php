@@ -92,7 +92,7 @@ final class SOLAWI_AdminPageNutzer extends SOLAWI_AbstractAdminPage {
 					$rolleName .= " <b>(Aktuell ohne Ernteanteile)</b>";
 				if ( !$hatRolle && $hatErnteanteile )
 					$rolleName .= " <b>(Fehler: Aktuell mit Ernteanteilen)</b>";
-				if ( $hatErnteanteile )
+				if ( $hatErnteanteile && $hatRolle )
 					$disabled = " disabled";
 			}
 			$rollen .= "<input type='checkbox'$checked name='rolle$rolleId' $onInput$disabled/>$rolleName<br>";

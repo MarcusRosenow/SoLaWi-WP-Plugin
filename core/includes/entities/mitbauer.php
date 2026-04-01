@@ -201,17 +201,7 @@ final class SOLAWI_Mitbauer {
 	 * Kann auch ein leeres Array sein.
 	 */
 	public function getErnteanteile() : array {
-		return $this->getMeta( self::META_KEY_ERNTEANTEILE, [] );
-	}
-
-	/**
-	 * Fügt ein Ernteanteil-Objekt hinzu und räumt dabei gleichzeitig auf.
-	 */
-	public function addErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
-		$ernteanteile = $this->getErnteanteile();
-		$ernteanteile[] = $ernteanteil;
-		sort( $ernteanteile );
-
+		$ernteanteile = $this->getMeta( self::META_KEY_ERNTEANTEILE, [] );
 		// Elemente entfernen, die zu weit in der Vergangenheit liegen
 		$letzterEintrag = null;
 		foreach ( $ernteanteile as $aktEintrag ) {
@@ -224,6 +214,16 @@ final class SOLAWI_Mitbauer {
 				break;
 			}
 		}
+		return $ernteanteile;
+	}
+
+	/**
+	 * Fügt ein Ernteanteil-Objekt hinzu und räumt dabei gleichzeitig auf.
+	 */
+	public function addErnteanteil( SOLAWI_MitbauerErnteanteil $ernteanteil ) : void {
+		$ernteanteile = $this->getErnteanteile();
+		$ernteanteile[] = $ernteanteil;
+		sort( $ernteanteile );
 		$this->setMeta( self::META_KEY_ERNTEANTEILE, $ernteanteile );
 	}
 
