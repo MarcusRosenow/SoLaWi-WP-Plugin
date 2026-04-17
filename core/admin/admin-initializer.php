@@ -86,9 +86,8 @@ class SOLAWI_AdminInitializer {
 		}
 		$page0 = new SOLAWI_AdminPageVerteiltag2Mitbauer();
 		$this->main_page = $page0;
-		$otherPages = [ new SOLAWI_AdminPageVerteiltage() ];
+		$otherPages = [ new SOLAWI_AdminPageVerteiltage(), new SOLAWI_AdminPageErnteanteile() ];
 		if ( SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) ) {
-			$otherPages[] = new SOLAWI_AdminPageErnteanteile();
 			$otherPages[] = new SOLAWI_AdminPageBieterverfahren();
 			$otherPages[] = new SOLAWI_AdminPageNutzer();
 			$otherPages[] = new SOLAWI_AdminPageVerteilstationen();
@@ -96,7 +95,7 @@ class SOLAWI_AdminInitializer {
 		add_menu_page(
 			$page0->getTitel(),			// Seitentitel
 			'SoLaWi',					// Menüpunkt-Name
-			'manage_options',			// Fähigkeit
+			'edit_posts',				// Fähigkeit
 			$page0->getSlug(),			// Slug
 			array( $page0, 'print' ),	// Callback-Funktion
 			'dashicons-feedback',		// Icon   https://azuliadesigns.com/wordpress/wordpress-dashicons-cheat-sheet/
@@ -107,7 +106,7 @@ class SOLAWI_AdminInitializer {
 				$page0->getSlug(),			// Parent-Slug
 				$page->getTitel(),			// Seitentitel
 				$page->getTitel(),			// Menüpunkt-Name
-				'manage_options',			// Fähigkeit
+				'edit_posts',				// Fähigkeit
 				$page->getSlug(),			// Slug
 				array( $page, 'print' )		// Callback-Funktion
 		);

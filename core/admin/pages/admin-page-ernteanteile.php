@@ -145,7 +145,7 @@ final class SOLAWI_AdminPageErnteanteile extends SOLAWI_AbstractAdminPage {
 	 * Gibt die Liste der Ernteanteile für alle Mitbauern aus.
 	 */
 	protected function initInhalt() : void {
-		if ( !SOLAWI_hasRolle( SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) )
+		if ( !SOLAWI_hasRolle( SOLAWI_Rolle::BAUER, SOLAWI_Rolle::MANAGER, SOLAWI_Rolle::ADMINISTRATOR ) )
 			return;
 		$mitbauern = SOLAWI_Mitbauer::values( null, true );
 		$stichtage = $this->ermittleStichtage( $mitbauern );
